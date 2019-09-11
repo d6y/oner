@@ -1,19 +1,18 @@
 # A 1R implementation in Rust
 
-Re-implementing the algorithm and experiments described in Holte (1993).
+Re-implementing the algorithm (and some experiments) described in Holte (1993).
 
 ## Status
 
 - [x] Basic algorithm
-- [ ] Support for missing values
-- [ ] Support for continuous values
+- [ ] Support for missing values ([#1](https://github.com/d6y/oner/issues/1))
+- [ ] Support for continuous values ([#2](https://github.com/d6y/oner/issues/2))
 
 ## Example run
 
 ```
 TODO
 ```
-
 
 ## Background
 
