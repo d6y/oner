@@ -10,8 +10,11 @@ Re-implementing the algorithm (and some experiments) described in Holte (1993).
 
 ## Example run
 
+:wave: New to Rust? [Install `rustup`](https://www.rust-lang.org/learn/get-started) first.
+
 ```
-TODO
+$ cargo build --quiet --release
+$ ./target/release/oner -d data/ch/ch.csv
 ```
 
 ## Background
@@ -23,8 +26,18 @@ See:
 - [Learn Rules from a Single Feature (OneR)](https://christophm.github.io/interpretable-ml-book/rules.html#learn-rules-from-a-single-feature-oner),
   in [Interpretable Machine Learning](https://christophm.github.io/interpretable-ml-book/). You'll also find links there to [implementations in R, Python, Java](https://christophm.github.io/interpretable-ml-book/rules.html#software-and-alternatives).
 
+## Terminology
+
+I'm following the terminology from Holte (1993):
+
+- Attribute (a.k.a. feature)
+- Value
+- Class (a.k.a. classification, prediction)
+- Example (a.k.a. instance)
 
 ## Example data sets
+
+I have taken data sets and converted to CSV where necessary, including adding header rows.
 
 The `data` folder contains the following data from the [UCI Machine Learning Repository](https://archive.ics.uci.edu/ml/citation_policy.html):
 
