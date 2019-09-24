@@ -1,10 +1,45 @@
 use csv;
+use rand::seq::SliceRandom;
+use rand::Rng;
 use std::path::PathBuf;
 
 #[derive(Debug)]
 pub struct Dataset {
     pub attribute_names: Vec<AttributeName>,
     pub examples: Vec<Example>,
+}
+
+impl Dataset {
+    pub fn split<R>(mut self, rng: &mut R, left_fraction: f64) -> (Dataset, Dataset)
+    where
+        R: Rng + ?Sized,
+    {
+        let left_count: usize = (left_fraction * self.examples.len() as f64).round() as usize;
+
+        let mut left_examples = Vec::with_capacity(left_count);
+        let mut right_examples = Vec::with_capacity(self.examples.len() - left_count);
+
+        self.examples.shuffle(rng);
+        for (i, example) in self.examples.into_iter().enumerate() {
+            if i < left_count {
+                left_examples.push(example);
+            } else {
+                right_examples.push(example);
+            }
+        }
+
+        let left = Dataset {
+            attribute_names: self.attribute_names.clone(),
+            examples: left_examples,
+        };
+
+        let right = Dataset {
+            attribute_names: self.attribute_names,
+            examples: right_examples,
+        };
+
+        (left, right)
+    }
 }
 
 pub type AttributeName = String;
