@@ -4,42 +4,9 @@ use rand::Rng;
 use std::path::PathBuf;
 
 #[derive(Debug)]
-pub struct Dataset {
-    pub attribute_names: Vec<AttributeName>,
-    pub examples: Vec<Example>,
-}
-
-impl Dataset {
-    pub fn split<R>(mut self, rng: &mut R, left_fraction: f64) -> (Dataset, Dataset)
-    where
-        R: Rng + ?Sized,
-    {
-        let left_count: usize = (left_fraction * self.examples.len() as f64).round() as usize;
-
-        let mut left_examples = Vec::with_capacity(left_count);
-        let mut right_examples = Vec::with_capacity(self.examples.len() - left_count);
-
-        self.examples.shuffle(rng);
-        for (i, example) in self.examples.into_iter().enumerate() {
-            if i < left_count {
-                left_examples.push(example);
-            } else {
-                right_examples.push(example);
-            }
-        }
-
-        let left = Dataset {
-            attribute_names: self.attribute_names.clone(),
-            examples: left_examples,
-        };
-
-        let right = Dataset {
-            attribute_names: self.attribute_names,
-            examples: right_examples,
-        };
-
-        (left, right)
-    }
+pub struct Dataset<N, E> {
+    pub attribute_names: Vec<N>,
+    pub examples: Vec<E>,
 }
 
 pub type AttributeName = String;
@@ -52,7 +19,7 @@ pub struct Example {
 
 pub type Value = String;
 
-pub fn load(path: &PathBuf) -> Result<Dataset, csv::Error> {
+pub fn load(path: &PathBuf) -> Result<Dataset<AttributeName, Example>, csv::Error> {
     let mut rdr = csv::Reader::from_path(path)?;
 
     // The header contains attribute names:
@@ -92,4 +59,56 @@ fn csv_failure<T>(msg: String) -> Result<T, csv::Error> {
     use std::io::{Error, ErrorKind};
     let cause = Error::new(ErrorKind::Other, msg);
     Err(csv::Error::from(cause))
+}
+
+impl<N, E> Dataset<N, E> {
+    pub fn split<R>(mut self, rng: &mut R, left_fraction: f64) -> (Self, Self)
+    where
+        R: Rng + ?Sized,
+        N: Clone,
+    {
+        let left_count: usize = (left_fraction * self.examples.len() as f64).round() as usize;
+
+        let mut left_examples = Vec::with_capacity(left_count);
+        let mut right_examples = Vec::with_capacity(self.examples.len() - left_count);
+
+        self.examples.shuffle(rng);
+        for (i, example) in self.examples.into_iter().enumerate() {
+            if i < left_count {
+                left_examples.push(example);
+            } else {
+                right_examples.push(example);
+            }
+        }
+
+        let left = Dataset {
+            attribute_names: self.attribute_names.clone(),
+            examples: left_examples,
+        };
+
+        let right = Dataset {
+            attribute_names: self.attribute_names,
+            examples: right_examples,
+        };
+
+        (left, right)
+    }
+}
+
+#[cfg(test)]
+mod test_split {
+    use super::Dataset;
+    use rand::rngs::StdRng;
+    use rand::SeedableRng;
+    #[test]
+    fn test_can_split() {
+        let ds = Dataset {
+            attribute_names: vec!["a", "b", "c", "d"],
+            examples: vec![1, 2, 3, 4],
+        };
+        let mut rng: StdRng = SeedableRng::seed_from_u64(3u64);
+        let (left, right) = ds.split(&mut rng, 2.0 / 3.0);
+        assert_eq!(left.examples.len(), 3);
+        assert_eq!(right.examples.len(), 1);
+    }
 }

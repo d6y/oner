@@ -12,7 +12,7 @@ pub struct Config {
     pub seed: u64,
 
     /// Fraction of the data to use for training (vs. testing)
-    #[structopt(short, long, default_value = "0.666666667")]
+    #[structopt(short, long, default_value = "0.6666666666666666")]
     pub training_fraction: f64,
 
     /// Number of times to repeat an experiment to report average accuracy
