@@ -4,9 +4,9 @@ use rand::Rng;
 use std::path::PathBuf;
 
 #[derive(Debug)]
-pub struct Dataset<N, E> {
+pub struct Dataset<N, X> {
     pub attribute_names: Vec<N>,
-    pub examples: Vec<E>,
+    pub examples: Vec<X>,
 }
 
 pub type AttributeName = String;
@@ -61,7 +61,7 @@ fn csv_failure<T>(msg: String) -> Result<T, csv::Error> {
     Err(csv::Error::from(cause))
 }
 
-impl<N, E> Dataset<N, E> {
+impl<N, X> Dataset<N, X> {
     pub fn split<R>(mut self, rng: &mut R, left_fraction: f64) -> (Self, Self)
     where
         R: Rng + ?Sized,
