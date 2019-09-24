@@ -1,10 +1,9 @@
-use crate::config::Config;
 use csv;
-use std::error::Error;
+use std::path::PathBuf;
 
 #[derive(Debug)]
 pub struct Dataset {
-    pub attributes: Vec<AttributeName>,
+    pub attribute_names: Vec<AttributeName>,
     pub examples: Vec<Example>,
 }
 
@@ -12,38 +11,39 @@ pub type AttributeName = String;
 
 #[derive(Debug)]
 pub struct Example {
-    pub attributes: Vec<Value>,
+    pub attribute_values: Vec<Value>,
     pub class: Value,
 }
 
 pub type Value = String;
 
-pub fn load(config: &Config) -> Result<Dataset, Box<dyn Error>> {
-    let mut rdr = csv::Reader::from_path(&config.data)?;
+pub fn load(path: &PathBuf) -> Result<Dataset, csv::Error> {
+    let mut rdr = csv::Reader::from_path(path)?;
 
-    // The header oontains attribute names:
+    // The header contains attribute names:
     let headers = rdr.headers()?;
-    let attributes: Vec<AttributeName> = headers.iter().map(|name| name.to_owned()).collect();
+    let attribute_names: Vec<AttributeName> = headers.iter().map(|name| name.to_owned()).collect();
 
-    // Traverse the rows, converting them into Example records:
+    // How to turn a row of String values into an `Example`
     let to_example = |row: csv::StringRecord| {
         let elements: Vec<&str> = row.iter().collect();
         match elements[..].split_last() {
             Some((&last, init)) => Ok(Example {
-                attributes: init.iter().map(|&a| a.to_owned()).collect(),
+                attribute_values: init.iter().map(|&a| a.to_owned()).collect(),
                 class: last.to_owned(),
             }),
-            _ => csv_failure(format!("Invalid row: {:?}", &elements)),
+            _ => csv_failure(format!("Rows should contain at least two values. Found: {:?}", &elements)),
         }
     };
 
+    // Traverse the rows, converting them into `Example` records:
     let examples: Result<Vec<Example>, _> = rdr
         .records()
         .map(|result| result.and_then(to_example))
         .collect();
 
     let dataset = Dataset {
-        attributes,
+        attribute_names,
         examples: examples?,
     };
 
