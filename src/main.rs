@@ -1,5 +1,6 @@
 mod config;
 mod dataset;
+mod oner;
 use config::Config;
 use rand::rngs::StdRng;
 use rand::SeedableRng;
@@ -20,6 +21,10 @@ fn main() {
                 training.examples.len(),
                 testing.examples.len()
             );
+
+            let rule = oner::find(&training);
+            println!("{:#?}", &rule);
+
         }
         Err(msg) => println!("Error reading data: {}", msg),
     };
