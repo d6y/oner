@@ -32,7 +32,10 @@ pub fn load(path: &PathBuf) -> Result<Dataset, csv::Error> {
                 attribute_values: init.iter().map(|&a| a.to_owned()).collect(),
                 class: last.to_owned(),
             }),
-            _ => csv_failure(format!("Rows should contain at least two values. Found: {:?}", &elements)),
+            _ => csv_failure(format!(
+                "Rows should contain at least two values. Found: {:?}",
+                &elements
+            )),
         }
     };
 
