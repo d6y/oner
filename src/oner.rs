@@ -19,8 +19,24 @@ trait Interpreter {
 }
 
 impl Interpreter for Rule {
-    fn run(&self, _dataset: &Dataset<AttributeName, Example>) -> Accuracy {
-        Accuracy(42.0)
+    fn run(&self, dataset: &Dataset<AttributeName, Example>) -> Accuracy {
+        let matching_rows = dataset
+            .examples
+            .iter()
+            .filter(|row| row.attribute_values[self.attribute_index] == self.attribute_value);
+
+        let right_wrong: Vec<bool> = matching_rows
+            .map(|row| row.class == self.predicted_class)
+            .collect();
+
+        let num_matched = right_wrong.len();
+        let num_correct = right_wrong.into_iter().filter(|&b| b).count();
+
+        if num_matched == 0 {
+            Accuracy(0.0)
+        } else {
+            Accuracy(num_correct as f64 / num_matched as f64)
+        }
     }
 }
 
