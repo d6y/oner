@@ -2,6 +2,7 @@ mod config;
 mod dataset;
 mod oner;
 use config::Config;
+use oner::Interpreter;
 use rand::rngs::StdRng;
 use rand::SeedableRng;
 use structopt::StructOpt;
@@ -22,11 +23,12 @@ fn main() {
                 testing.examples.len()
             );
 
-            let rule = oner::discover(&training);
-            println!(
-                "{:#?}",
-                &rule.map(|r| r.print(&training.input_attribute_names))
-            );
+            if let Some(rule) = oner::discover(&training) {
+                println!("{:#?}", &rule.print(&training.input_attribute_names));
+                println!("Test set: {:?}", &rule.apply(&testing));
+            } else {
+                println!("No rule (no data?)");
+            };
         }
         Err(msg) => println!("Error reading data: {}", msg),
     };

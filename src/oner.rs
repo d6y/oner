@@ -21,14 +21,14 @@ impl Rule {
 }
 
 #[derive(Debug, PartialEq, PartialOrd)]
-struct Accuracy(f64);
+pub struct Accuracy(f64);
 
-trait Interpreter {
-    fn run(&self, dataset: &Dataset<AttributeName, Example>) -> Accuracy;
+pub trait Interpreter {
+    fn apply(&self, dataset: &Dataset<AttributeName, Example>) -> Accuracy;
 }
 
 impl Interpreter for Rule {
-    fn run(&self, dataset: &Dataset<AttributeName, Example>) -> Accuracy {
+    fn apply(&self, dataset: &Dataset<AttributeName, Example>) -> Accuracy {
         let matching_rows = dataset
             .examples
             .iter()
@@ -52,7 +52,7 @@ impl Interpreter for Rule {
 pub fn discover(dataset: &Dataset<AttributeName, Example>) -> Option<Rule> {
     let mut rules = generate_hypotheses(dataset);
 
-    let scores: Vec<Accuracy> = rules.iter().map(|rule| rule.run(dataset)).collect();
+    let scores: Vec<Accuracy> = rules.iter().map(|rule| rule.apply(dataset)).collect();
     let maybe_best_index = index_of_largest_value(&scores);
 
     maybe_best_index.map(|i| rules.remove(i))
