@@ -11,6 +11,15 @@ pub struct Rule {
     // training_set_accuracy: f64,
 }
 
+impl Rule {
+    pub fn print(&self, attribute_names: &[String]) -> String {
+        format!(
+            "IF {} = {} THEN {}",
+            attribute_names[self.attribute_index], self.attribute_value, self.predicted_class
+        )
+    }
+}
+
 #[derive(Debug, PartialEq, PartialOrd)]
 struct Accuracy(f64);
 

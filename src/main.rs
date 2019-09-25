@@ -23,7 +23,10 @@ fn main() {
             );
 
             let rule = oner::discover(&training);
-            println!("{:#?}", &rule);
+            println!(
+                "{:#?}",
+                &rule.map(|r| r.print(&training.input_attribute_names))
+            );
         }
         Err(msg) => println!("Error reading data: {}", msg),
     };
