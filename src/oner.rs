@@ -11,9 +11,40 @@ pub struct Rule {
     // training_set_accuracy: f64,
 }
 
+#[derive(Debug, PartialEq, PartialOrd)]
+struct Accuracy(f64);
+
+trait Interpreter {
+    fn run(&self, dataset: &Dataset<AttributeName, Example>) -> Accuracy;
+}
+
+impl Interpreter for Rule {
+    fn run(&self, _dataset: &Dataset<AttributeName, Example>) -> Accuracy {
+        Accuracy(42.0)
+    }
+}
+
 pub fn discover(dataset: &Dataset<AttributeName, Example>) -> Option<Rule> {
-    let hs = generate_hypotheses(dataset);
-    hs.into_iter().next()
+    let mut rules = generate_hypotheses(dataset);
+
+    let scores: Vec<Accuracy> = rules.iter().map(|rule| rule.run(dataset)).collect();
+    let maybe_best_index = index_of_largest_value(&scores);
+
+    maybe_best_index.map(|i| rules.remove(i))
+}
+
+fn index_of_largest_value<V: PartialOrd>(vs: &[V]) -> Option<usize> {
+    if let Some(first_value) = vs.first() {
+        let init = (0, first_value);
+        let best =
+            vs.iter().enumerate().fold(
+                init,
+                |(best_i, best_v), (i, v)| if v > best_v { (i, v) } else { (best_i, best_v) },
+            );
+        Some(best.0)
+    } else {
+        None
+    }
 }
 
 fn generate_hypotheses(dataset: &Dataset<AttributeName, Example>) -> Vec<Rule> {
