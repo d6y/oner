@@ -22,9 +22,8 @@ fn main() {
                 testing.examples.len()
             );
 
-            let rule = oner::find(&training);
+            let rule = oner::discover(&training);
             println!("{:#?}", &rule);
-
         }
         Err(msg) => println!("Error reading data: {}", msg),
     };

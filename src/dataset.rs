@@ -5,7 +5,8 @@ use std::path::PathBuf;
 
 #[derive(Debug)]
 pub struct Dataset<N, X> {
-    pub attribute_names: Vec<N>,
+    pub input_attribute_names: Vec<N>,
+    pub output_attribute_name: N,
     pub examples: Vec<X>,
 }
 
@@ -47,12 +48,17 @@ pub fn load(path: &PathBuf) -> Result<Dataset<AttributeName, Example>, csv::Erro
         .map(|result| result.and_then(to_example))
         .collect();
 
-    let dataset = Dataset {
-        attribute_names,
-        examples: examples?,
-    };
-
-    Ok(dataset)
+    match attribute_names[..].split_last() {
+        None => csv_failure(format!(
+            "Too few attribute names (header row problem): {:?}",
+            &attribute_names
+        )),
+        Some((class, inputs)) => Ok(Dataset {
+            input_attribute_names: inputs.to_vec(),
+            output_attribute_name: class.to_owned(),
+            examples: examples?,
+        }),
+    }
 }
 
 fn csv_failure<T>(msg: String) -> Result<T, csv::Error> {
@@ -82,12 +88,14 @@ impl<N, X> Dataset<N, X> {
         }
 
         let left = Dataset {
-            attribute_names: self.attribute_names.clone(),
+            input_attribute_names: self.input_attribute_names.clone(),
+            output_attribute_name: self.output_attribute_name.clone(),
             examples: left_examples,
         };
 
         let right = Dataset {
-            attribute_names: self.attribute_names,
+            input_attribute_names: self.input_attribute_names,
+            output_attribute_name: self.output_attribute_name,
             examples: right_examples,
         };
 
@@ -103,7 +111,8 @@ mod test_split {
     #[test]
     fn test_can_split() {
         let ds = Dataset {
-            attribute_names: vec!["a", "b", "c", "d"],
+            input_attribute_names: vec!["a"],
+            output_attribute_name: "z",
             examples: vec![1, 2, 3, 4],
         };
         let mut rng: StdRng = SeedableRng::seed_from_u64(3u64);
