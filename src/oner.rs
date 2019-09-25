@@ -11,6 +11,33 @@ pub struct Rule {
     // training_set_accuracy: f64,
 }
 
+pub fn discover(dataset: &Dataset<AttributeName, Example>) -> Option<Rule> {
+    let hs = generate_hypotheses(dataset);
+    hs.into_iter().next()
+}
+
+fn generate_hypotheses(dataset: &Dataset<AttributeName, Example>) -> Vec<Rule> {
+    let mut hs = Vec::new();
+
+    // For each attribute...
+    for (a_index, _a_name) in dataset.input_attribute_names.iter().enumerate() {
+        // For each value of the attribute...
+        for v in distinct_column_values(dataset, a_index) {
+            // Find the most frequent class for that attribute with that value...
+            if let Some(class) = most_frequent_class(dataset, a_index, &v) {
+                let rule = Rule {
+                    attribute_index: a_index,
+                    attribute_value: v.to_owned(),
+                    predicted_class: class.to_owned(),
+                };
+                hs.push(rule);
+            }
+        }
+    }
+
+    hs
+}
+
 fn distinct_column_values(
     dataset: &Dataset<AttributeName, Example>,
     attribute_index: usize,
@@ -78,24 +105,5 @@ mod test_freq_class {
             most_frequent_class(&dataset, 0, "yes"),
             Some(&String::from("hi"))
         );
-    }
-}
-
-pub fn discover(dataset: &Dataset<AttributeName, Example>) -> Rule {
-    // let hypotheses = Vec::new();
-
-    for (a_index, a_name) in dataset.input_attribute_names.iter().enumerate() {
-        for v in distinct_column_values(dataset, a_index) {
-            let class = most_frequent_class(dataset, a_index, &v);
-            println!("{} IF {} = {} THEN {:?}", a_index, a_name, &v, &class);
-        }
-    }
-
-    Rule {
-        attribute_index: 0,
-        // attribute_name: String::from("a1"),
-        attribute_value: String::from("v1"),
-        predicted_class: String::from("vc"),
-        // training_set_accuracy: 0.0,
     }
 }
