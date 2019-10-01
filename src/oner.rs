@@ -83,8 +83,8 @@ fn generate_hypotheses(dataset: &Dataset<AttributeName, Example>) -> Vec<Rule> {
 
     // For each attribute...
     for (a_index, _a_name) in dataset.input_attribute_names.iter().enumerate() {
-        let hypotesis = generate_rule_for_attribute(dataset, a_index);
-        hs.push(hypotesis);
+        let hypothesis = generate_rule_for_attribute(dataset, a_index);
+        hs.push(hypothesis);
     }
 
     hs
