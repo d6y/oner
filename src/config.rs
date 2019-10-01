@@ -16,7 +16,7 @@ pub struct Config {
     pub training_fraction: f64,
 
     /// Use all the data for training and testing (overrides -t)
-    #[structopt(short="w", long)]
+    #[structopt(short = "w", long)]
     pub use_whole_dataset: bool,
 
     /// Number of times to repeat an experiment to report average accuracy

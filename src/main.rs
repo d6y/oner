@@ -15,7 +15,6 @@ fn main() {
 
     match dataset::load(&config.data) {
         Ok(dataset) => {
-
             let (training, testing) = if config.use_whole_dataset {
                 (dataset.clone(), dataset)
             } else {
@@ -29,7 +28,10 @@ fn main() {
             );
 
             if let Some(rule) = oner::discover(&training) {
-                println!("{}", print::as_matcher(&rule, &training.input_attribute_names));
+                println!(
+                    "{}",
+                    print::as_matcher(&rule, &training.input_attribute_names)
+                );
                 println!("Test set: {:?}", oner::evaluate(&rule, &testing));
             } else {
                 println!("No rule discovered (no data?)");

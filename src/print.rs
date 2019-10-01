@@ -6,7 +6,10 @@ pub fn as_matcher(rule: &Rule, attribute_names: &[String]) -> String {
     rows.push(format!("match {}", attribute_names[rule.attribute_index]));
 
     for case in &rule.cases {
-        rows.push(format!("  {} => {}", case.attribute_value, case.predicted_class));
+        rows.push(format!(
+            "  {} => {}",
+            case.attribute_value, case.predicted_class
+        ));
     }
 
     rows.join("\n")

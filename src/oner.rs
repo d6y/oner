@@ -14,16 +14,17 @@ pub struct Case {
     pub predicted_class: Value,
 }
 
-
 #[derive(Debug, PartialEq, PartialOrd)]
 pub struct Accuracy(f64);
 
 pub fn evaluate(rule: &Rule, dataset: &Dataset<AttributeName, Example>) -> Accuracy {
-
     let right_wrong: Vec<Option<bool>> = dataset
         .examples
         .iter()
-        .map(|example| rule.apply(example).map(|prediction| prediction == example.class))
+        .map(|example| {
+            rule.apply(example)
+                .map(|prediction| prediction == example.class)
+        })
         .collect();
 
     // let num_unclassified = right_wrong.into_iter().filter(|o| o.is_none()).count();
@@ -45,7 +46,10 @@ pub trait Interpreter {
 impl Interpreter for Rule {
     fn apply(&self, example: &Example) -> Option<Value> {
         let example_value = &example.attribute_values[self.attribute_index];
-        let matching_case = self.cases.iter().find(|&case| &case.attribute_value == example_value);
+        let matching_case = self
+            .cases
+            .iter()
+            .find(|&case| &case.attribute_value == example_value);
         matching_case.map(|case| case.predicted_class.to_owned())
     }
 }
@@ -81,17 +85,20 @@ fn generate_hypotheses(dataset: &Dataset<AttributeName, Example>) -> Vec<Rule> {
     for (a_index, _a_name) in dataset.input_attribute_names.iter().enumerate() {
         let hypotesis = generate_rule_for_attribute(dataset, a_index);
         hs.push(hypotesis);
-        }
+    }
 
     hs
 }
 
-fn generate_rule_for_attribute(dataset: &Dataset<AttributeName, Example>, attribute_index: usize) -> Rule {
+fn generate_rule_for_attribute(
+    dataset: &Dataset<AttributeName, Example>,
+    attribute_index: usize,
+) -> Rule {
     let mut cases = Vec::new();
     for v in distinct_column_values(dataset, attribute_index) {
         // Find the most frequent class for that attribute with that value...
         if let Some(class) = most_frequent_class(dataset, attribute_index, &v) {
-            cases.push( Case { 
+            cases.push(Case {
                 attribute_value: v.to_owned(),
                 predicted_class: class.to_owned(),
             });
