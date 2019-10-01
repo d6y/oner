@@ -54,6 +54,7 @@ impl Interpreter for Rule {
     }
 }
 
+/// Here we go!
 pub fn discover(dataset: &Dataset<AttributeName, Example>) -> Option<Rule> {
     let mut rules = generate_hypotheses(dataset);
 
