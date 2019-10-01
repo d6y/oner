@@ -1,0 +1,11 @@
+location,size,pets,value
+good,small,yes,high
+good,big,no,high
+good,big,no,high
+bad,medium,no,medium
+good,medium,"only cats",medium
+good,small,"only cats",medium
+bad,medium,yes,medium
+bad,small,yes,low
+bad,medium,yes,low
+bad,small,no,low

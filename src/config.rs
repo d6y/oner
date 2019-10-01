@@ -15,6 +15,10 @@ pub struct Config {
     #[structopt(short, long, default_value = "0.6666666666666666")]
     pub training_fraction: f64,
 
+    /// Use all the data for training and testing (overrides -t)
+    #[structopt(short="w", long)]
+    pub use_whole_dataset: bool,
+
     /// Number of times to repeat an experiment to report average accuracy
     #[structopt(short, long, default_value = "25")]
     pub repeats: i64,

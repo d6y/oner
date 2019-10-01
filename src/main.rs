@@ -1,8 +1,8 @@
 mod config;
 mod dataset;
 mod oner;
+mod print;
 use config::Config;
-use oner::Interpreter;
 use rand::rngs::StdRng;
 use rand::SeedableRng;
 use structopt::StructOpt;
@@ -15,8 +15,13 @@ fn main() {
 
     match dataset::load(&config.data) {
         Ok(dataset) => {
-            println!("Full dataset size: {}", dataset.examples.len());
-            let (training, testing) = dataset.split(&mut rng, config.training_fraction);
+
+            let (training, testing) = if config.use_whole_dataset {
+                (dataset.clone(), dataset)
+            } else {
+                dataset.split(&mut rng, config.training_fraction)
+            };
+
             println!(
                 "Training set size: {}, test set size: {}",
                 training.examples.len(),
@@ -24,10 +29,10 @@ fn main() {
             );
 
             if let Some(rule) = oner::discover(&training) {
-                println!("{:#?}", &rule.print(&training.input_attribute_names));
-                println!("Test set: {:?}", &rule.apply(&testing));
+                println!("{}", print::as_matcher(&rule, &training.input_attribute_names));
+                println!("Test set: {:?}", oner::evaluate(&rule, &testing));
             } else {
-                println!("No rule (no data?)");
+                println!("No rule discovered (no data?)");
             };
         }
         Err(msg) => println!("Error reading data: {}", msg),

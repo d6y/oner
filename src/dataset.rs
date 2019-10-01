@@ -3,7 +3,7 @@ use rand::seq::SliceRandom;
 use rand::Rng;
 use std::path::PathBuf;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Dataset<N, X> {
     pub input_attribute_names: Vec<N>,
     pub output_attribute_name: N,
@@ -12,7 +12,7 @@ pub struct Dataset<N, X> {
 
 pub type AttributeName = String;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Example {
     pub attribute_values: Vec<Value>,
     pub class: Value,
