@@ -5,7 +5,7 @@ Re-implementing the algorithm (and some experiments) described in Holte (1993).
 ## Status
 
 - [x] Basic algorithm
-- [ ] Support for missing values ([#1](https://github.com/d6y/oner/issues/1))
+- [x] Support for missing values ([#1](https://github.com/d6y/oner/issues/1))
 - [ ] Support for continuous values ([#2](https://github.com/d6y/oner/issues/2))
 - [ ] Handle tied accuracy in rule discovery ([#3](https://github.com/d6y/oner/issues/3))
 
@@ -41,8 +41,17 @@ I have taken data sets and converted to CSV where necessary, including adding he
 
 The `data` folder contains the data from various sources. Unless otherwise specified, it'll be the [UCI Machine Learning Repository](https://archive.ics.uci.edu/ml/citation_policy.html).
 
+- `bc`, a [breast cancer](https://archive.ics.uci.edu/ml/datasets/Breast+Cancer) dataset.
+   In the CSV version I have moved the class from the first column to the last column because that's what this code expects. I did this with: `awk -F, '{print $2,$3,$4,$5,$6,$7,$8,$9,$10,$1}' OFS=, < breast-cancer.data  > bc.csv`
+
 - `ch`, the [Chess (King-Rook vs. King-Pawn)](https://archive.ics.uci.edu/ml/datasets/Chess+%28King-Rook+vs.+King-Pawn%29) dataset.
 
 - `fake-house`, the dataset used to introduce 1R in [Interpretable Machine Learning](https://christophm.github.io/interpretable-ml-book/rules.html#learn-rules-from-a-single-feature-oner) (published under [CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/)). To run the example use the `-w` flag to use the whole dataset for rule discovery.
 
+## Documentation
 
+To open the internal documentation:
+
+```
+$ cargo doc --no-deps --open --document-private-items
+```
