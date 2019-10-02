@@ -50,8 +50,6 @@ $ cargo build --quiet --release
 $ ./target/release/oner -d data/ch/ch.csv
 ```
 
-
-
 ## Terminology
 
 I'm following the terminology from Holte (1993):
