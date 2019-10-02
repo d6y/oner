@@ -23,9 +23,9 @@ pub struct Example {
 pub type Value = String;
 
 /// Read a CSV file (with headers and final column as classification) as a `Dataset`.
-/// 
+///
 /// The CSV file must:
-/// - start with a header row; and 
+/// - start with a header row; and
 /// - have the class as the last attribute.
 pub fn load(path: &PathBuf) -> Result<Dataset<AttributeName, Example>, csv::Error> {
     let mut rdr = csv::Reader::from_path(path)?;

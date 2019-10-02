@@ -1,6 +1,38 @@
 # A 1R implementation in Rust
 
-Re-implementing the algorithm (and some experiments) described in Holte (1993).
+Re-implementing the 1R algorithm (and experiments) described in Holte (1993).
+
+## What is this?
+
+1R is a baseline rule learning algorithm.
+
+An algorithm first generates a rule for each attribute.
+The rule is based on the different values the attributes takes on, 
+and for each value the rule predicts the most frequent class that has that value.
+The "one rule" is the rule that has the best accuracy.
+
+E.g., given a data set of voter demographics (attributes) and voting intention (class),
+1R might produces a rule of the form:
+
+```
+match region {
+   "the north" => "party A"
+   "the south" => "parry B"
+}
+```
+
+The rule might only have, say, 20% accuracy. 
+That's a baseline to compare to other algorithms.
+
+A related idea is "0R" (zero rule), which is the most frequent class in the dataset.
+That is, if our voting data has 100 rows, and 51 of them were for "party A", 
+then 0R would be: predict "party A" (and would have an accuracy of 51/100).
+
+See:
+
+- Holte, R.C. _Machine Learning_ (1993) 11: 63. [https://doi.org/10.1023/A:1022631118932](https://doi.org/10.1023/A:1022631118932).
+
+- Molnar, C, _Interpretable Machine Learning_ (2019). In particular: [Learn Rules from a Single Feature (OneR)](https://christophm.github.io/interpretable-ml-book/rules.html#learn-rules-from-a-single-feature-oner).
 
 ## Status
 
@@ -18,13 +50,7 @@ $ cargo build --quiet --release
 $ ./target/release/oner -d data/ch/ch.csv
 ```
 
-## Background
 
-See:
-
-- Holte, R.C. _Machine Learning_ (1993) 11: 63. [https://doi.org/10.1023/A:1022631118932](https://doi.org/10.1023/A:1022631118932).
-
-- Molnar, C, _Interpretable Machine Learning_ (2019). In particular: [Learn Rules from a Single Feature (OneR)](https://christophm.github.io/interpretable-ml-book/rules.html#learn-rules-from-a-single-feature-oner).
 
 ## Terminology
 

@@ -2,6 +2,7 @@ mod config;
 mod dataset;
 mod oner;
 mod print;
+mod quant;
 use config::Config;
 use rand::rngs::StdRng;
 use rand::SeedableRng;
