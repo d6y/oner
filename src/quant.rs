@@ -6,7 +6,6 @@ pub fn is_numeric() -> bool {
     true
 }
 
-// fn quantize<'v, C : std::fmt::Display + Eq>(column: &'v [(&str, &str)], small: usize) -> HashMap<&'v str, String> {
 fn quantize<'v>(column: &'v [(&str, &str)], small: usize) -> HashMap<&'v str, String> {
     // 1. Get the attribute values in sorted order:
     let mut sorted: Vec<(f32, &str)> = Vec::new();
@@ -14,8 +13,7 @@ fn quantize<'v>(column: &'v [(&str, &str)], small: usize) -> HashMap<&'v str, St
         if let Ok(n) = v.parse::<f32>() {
             sorted.push((n, c));
         } else {
-            // TODO: handle unparsable input
-            unimplemented!("not yet handling non-numeric input e.g., missing values");
+            unimplemented!("Cannot yet quantize non-numeric values: https://github.com/d6y/oner/issues/1");
         }
     }
     sorted.ord_subset_sort_by_key(|pair| pair.0);
@@ -39,6 +37,9 @@ fn quantize<'v>(column: &'v [(&str, &str)], small: usize) -> HashMap<&'v str, St
     dbg!(&split_trimmed);
 
     // Merge any neighbouring splits with the same classification:
+    // https://github.com/d6y/oner/issues/3#issuecomment-537864969
+    let intervals = Interval::from_splits(split_trimmed, &sorted);
+    dbg!(&intervals);
 
     // Generate a re-mapping table from each value we've seen to the new value:
 
@@ -46,10 +47,8 @@ fn quantize<'v>(column: &'v [(&str, &str)], small: usize) -> HashMap<&'v str, St
 }
 
 fn trim_splits(splits: Vec<usize>, small: usize, data: &Vec<(f32, &str)>) -> Vec<usize> {
-    let mut keeps = Vec::new();
-
     // Tail-recursive safe walk of the splits:
-    trim_splits0(splits.as_slice(), small, data, keeps, 0)
+    trim_splits0(splits.as_slice(), small, data, Vec::new(), 0)
 }
 
 fn trim_splits0(
@@ -94,6 +93,55 @@ where
     counts
 }
 
+#[derive(Debug)]
+enum Interval<T> {
+    Lower { below: T },  // e.g., < 100
+    Range { from: T, below: T }, // e.g., >= 100 and < 200
+    Upper { from: T }, // e.g., >= 200
+    Infinite,
+}
+
+impl<T> Interval<T>  where T : Copy {
+
+    // `splits` is a list of indices where we want to break the values into intervals.
+    // The values are the (value, class) pairs in `data`, and the split indicies are into `data`.
+    // The first split is "anything below this value", and the last is "anything of this value and above".
+    // Anything else is a range interval.
+    // If there are no splits, then there's a single interval covering all values.
+    fn from_splits(splits: Vec<usize>, data: &Vec<(T, &str)>) -> Vec<Interval<T>> {
+
+        let lower = |index: usize| Interval::Lower {
+            below: data[splits[index]].0,
+        };
+
+        let upper = |index: usize| Interval::Upper {
+            from: data[splits[index]].0,
+        };
+
+        let range = |index_start: usize, index_end: usize| Interval::Range {
+            from: data[splits[index_start]].0,
+            below: data[splits[index_end]].0,
+        };
+
+        match splits.len() {
+            0 => vec![Interval::Infinite],
+            1 => {
+                vec![ lower(0), upper(0) ]
+            },
+            n => {
+                let mut intervals = Vec::with_capacity(n+1);
+                intervals.push(lower(0));
+                for (&curr_i, &prev_i) in splits.iter().skip(1).take(n-2).zip(splits.iter()) {
+                    intervals.push(range(prev_i, curr_i-1));
+                }
+                intervals.push(upper(n-1));
+                intervals
+            },
+        }
+
+    }
+}
+
 #[cfg(test)]
 mod test_quantize {
     use super::quantize;
@@ -120,7 +168,7 @@ mod test_quantize {
             ("85", "D"),
         ];
 
-        let i1 = ">= 64 and < 71"; // TODO: Could be just "< 71"?
+        let i1 = "< 71"; 
         let i2 = ">= 85";
 
         let expected: HashMap<&str, String> = [

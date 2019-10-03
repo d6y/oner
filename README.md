@@ -37,9 +37,9 @@ See:
 ## Status
 
 - [x] Basic algorithm
-- [x] Support for missing values ([#1](https://github.com/d6y/oner/issues/1))
 - [ ] Support for continuous values ([#2](https://github.com/d6y/oner/issues/2))
-- [ ] Handle tied accuracy in rule discovery ([#3](https://github.com/d6y/oner/issues/3))
+- [ ] Support for missing values during quantization ([#1](https://github.com/d6y/oner/issues/1))
+- [ ] Improve handling of ties ([#3](https://github.com/d6y/oner/issues/3))
 
 ## Example run
 
