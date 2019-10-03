@@ -24,8 +24,7 @@ fn quantize<'v>(column: &'v [(&str, &str)], small: usize) -> HashMap<&'v str, St
 
     // 2. Create a split each time the classification changes
 
-    // Index into `sorted` where the classification changes to a different value:
-    let mut split_index = Vec::new();
+    let mut split_index = Vec::new(); // Index into `sorted` where the classification changes to a different value.
     for (prev_index, ((_cur_value, cur_class), (_prev_val, prev_class))) in
         sorted.iter().skip(1).zip(sorted.iter()).enumerate()
     {
@@ -35,7 +34,7 @@ fn quantize<'v>(column: &'v [(&str, &str)], small: usize) -> HashMap<&'v str, St
     }
 
     // 3. Remove splits that are too small:
-    let mut split_trimmed = trim_splits(split_index, small, &sorted);
+    let split_trimmed = trim_splits(split_index, small, &sorted);
     dbg!(&split_trimmed);
 
     // Merge any neighbouring splits with the same classification:
@@ -48,7 +47,7 @@ fn quantize<'v>(column: &'v [(&str, &str)], small: usize) -> HashMap<&'v str, St
     HashMap::new()
 }
 
-fn trim_splits(splits: Vec<usize>, small: usize, data: &Vec<(f32, &str)>) -> Vec<usize> {
+fn trim_splits(splits: Vec<usize>, small: usize, data: &[(f32, &str)]) -> Vec<usize> {
     // Tail-recursive safe walk of the splits:
     trim_splits0(splits.as_slice(), small, data, Vec::new(), 0)
 }
@@ -56,7 +55,7 @@ fn trim_splits(splits: Vec<usize>, small: usize, data: &Vec<(f32, &str)>) -> Vec
 fn trim_splits0(
     splits: &[usize],
     small: usize,
-    data: &Vec<(f32, &str)>,
+    data: &[(f32, &str)],
     mut keep: Vec<usize>,
     start_index: usize,
 ) -> Vec<usize> {
@@ -76,13 +75,13 @@ fn trim_splits0(
     }
 }
 
-fn no_dominant_class(start: usize, until: usize, small: usize, data: &Vec<(f32, &str)>) -> bool {
+fn no_dominant_class(start: usize, until: usize, small: usize, data: &[(f32, &str)]) -> bool {
     let classes: Vec<&str> = data[start..until].iter().map(|pair| pair.1).collect();
     let counts = frequency_count(&classes);
     counts.values().all(|&count| count <= small)
 }
 
-fn frequency_count<T>(ts: &Vec<T>) -> HashMap<&T, usize>
+fn frequency_count<T>(ts: &[T]) -> HashMap<&T, usize>
 where
     T: Eq + Hash,
 {
@@ -112,7 +111,8 @@ where
     // The first split is "anything below this value", and the last is "anything of this value and above".
     // Anything else is a range interval.
     // If there are no splits, then there's a single interval covering all values.
-    fn from_splits(splits: Vec<usize>, data: &Vec<(T, C)>) -> Vec<Interval<T, C>> {
+    fn from_splits(splits: Vec<usize>, data: &[(T, C)]) -> Vec<Interval<T, C>> {
+        // What do do about ties for most frequent class? https://github.com/d6y/oner/issues/3#issuecomment-537864969
         let most_frequent_class = |start: usize, until: usize| {
             let classes: Vec<C> = data[start..until].iter().map(|pair| pair.1).collect();
             let largest: Option<&C> = frequency_count(&classes)
@@ -120,12 +120,7 @@ where
                 .ord_subset_max_by_key(|pair| pair.1)
                 .map(|pair| pair.0);
 
-            // Sanity check:
-            let splits_will_define_classes = || {
-                format!("Found no classes for a split during quantization. Range is {} until {} in splits {:?} for data {:?}", start, until, &splits, data)
-            };
-
-            *largest.unwrap_or_else(|| panic!(splits_will_define_classes()))
+            *largest.unwrap_or_else(|| panic!("Found no classes for a split during quantization. Range is {} until {} in splits {:?} for data {:?}", start, until, &splits, data))
         };
 
         let lower = |index: usize| Interval::Lower {
