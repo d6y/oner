@@ -1,5 +1,6 @@
-use std::collections::HashMap;
 use ord_subset::OrdSubsetSliceExt;
+use std::collections::HashMap;
+use std::hash::Hash;
 
 pub fn is_numeric() -> bool {
     true
@@ -11,7 +12,7 @@ fn quantize<'v>(column: &'v [(&str, &str)], small: usize) -> HashMap<&'v str, St
     let mut sorted: Vec<(f32, &str)> = Vec::new();
     for (v, c) in column {
         if let Ok(n) = v.parse::<f32>() {
-            sorted.push( (n, c) );
+            sorted.push((n, c));
         } else {
             // TODO: handle unparsable input
             unimplemented!("not yet handling non-numeric input e.g., missing values");
@@ -25,7 +26,9 @@ fn quantize<'v>(column: &'v [(&str, &str)], small: usize) -> HashMap<&'v str, St
 
     // Index into `sorted` where the classification changes to a different value:
     let mut split_index = Vec::new();
-    for (prev_index, ( (_cur_value, cur_class), (_prev_val, prev_class) ) ) in sorted.iter().skip(1).zip(sorted.iter()).enumerate() {
+    for (prev_index, ((_cur_value, cur_class), (_prev_val, prev_class))) in
+        sorted.iter().skip(1).zip(sorted.iter()).enumerate()
+    {
         if cur_class != prev_class {
             split_index.push(prev_index + 1);
         }
@@ -35,26 +38,31 @@ fn quantize<'v>(column: &'v [(&str, &str)], small: usize) -> HashMap<&'v str, St
     let mut split_trimmed = trim_splits(split_index, small, &sorted);
     dbg!(&split_trimmed);
 
-
-
     // Merge any neighbouring splits with the same classification:
 
     // Generate a re-mapping table from each value we've seen to the new value:
 
-   HashMap::new()
+    HashMap::new()
 }
 
 fn trim_splits(splits: Vec<usize>, small: usize, data: &Vec<(f32, &str)>) -> Vec<usize> {
     let mut keeps = Vec::new();
+
+    // Tail-recursive safe walk of the splits:
     trim_splits0(splits.as_slice(), small, data, keeps, 0)
 }
 
-fn trim_splits0(splits: &[usize], small: usize, data: &Vec<(f32, &str)>, mut keep: Vec<usize>, start_index: usize) -> Vec<usize> {
-
+fn trim_splits0(
+    splits: &[usize],
+    small: usize,
+    data: &Vec<(f32, &str)>,
+    mut keep: Vec<usize>,
+    start_index: usize,
+) -> Vec<usize> {
     if let Some(head) = splits.first() {
         let size = head - start_index;
         let tail = &splits[1..];
-        if size < small || no_dominant_class(start_index, *head, data) {
+        if size <= small || no_dominant_class(start_index, *head, small, data) {
             // Drop this split:
             trim_splits0(tail, small, data, keep, start_index)
         } else {
@@ -62,15 +70,28 @@ fn trim_splits0(splits: &[usize], small: usize, data: &Vec<(f32, &str)>, mut kee
             keep.push(*head);
             trim_splits0(tail, small, data, keep, *head)
         }
-
     } else {
         // No more elements to process
         keep
     }
 }
 
-fn no_dominant_class(start: usize, until: usize, data: &Vec<(f32, &str)>) -> bool {
-    false // TODO: implement
+fn no_dominant_class(start: usize, until: usize, small: usize, data: &Vec<(f32, &str)>) -> bool {
+    let classes: Vec<&str> = data[start..until].iter().map(|pair| pair.1).collect();
+    let counts = frequency_count(&classes);
+    counts.values().all(|&count| count <= small)
+}
+
+fn frequency_count<T>(ts: &Vec<T>) -> HashMap<&T, usize>
+where
+    T: Eq + Hash,
+{
+    let mut counts = HashMap::new();
+    for t in ts {
+        let count = counts.entry(t).or_insert(0);
+        *count += 1;
+    }
+    counts
 }
 
 #[cfg(test)]
@@ -100,8 +121,7 @@ mod test_quantize {
         ];
 
         let i1 = ">= 64 and < 71"; // TODO: Could be just "< 71"?
-        let i2 = ">= 71 and < 85";
-        let i3 = ">= 85";
+        let i2 = ">= 85";
 
         let expected: HashMap<&str, String> = [
             ("64", i1),
@@ -109,15 +129,18 @@ mod test_quantize {
             ("68", i1),
             ("69", i1),
             ("70", i1),
-            ("71", i2),
-            ("72", i2),
-            ("75", i2),
-            ("75", i2),
-            ("80", i2),
-            ("81", i2),
-            ("83", i2),
-            ("85", i3),
-        ].iter().map(|(v,s)| (*v, s.to_string())).collect();
+            ("71", i1),
+            ("72", i1),
+            ("75", i1),
+            ("75", i1),
+            ("80", i1),
+            ("81", i1),
+            ("83", i1),
+            ("85", i2),
+        ]
+        .iter()
+        .map(|(v, s)| (*v, s.to_string()))
+        .collect();
         assert_eq!(expected, quantize(&inputs, 3));
     }
 }
