@@ -2,12 +2,14 @@ use ord_subset::OrdSubsetIterExt;
 use ord_subset::OrdSubsetSliceExt;
 use std::collections::HashMap;
 use std::fmt::Debug;
+use std::fmt::Display;
 use std::hash::Hash;
 
 pub fn is_numeric() -> bool {
     true
 }
 
+///
 fn quantize<'v>(column: &'v [(&str, &str)], small: usize) -> HashMap<&'v str, String> {
     // 1. Get the attribute values in sorted order:
     let mut sorted: Vec<(f32, &str)> = Vec::new();
@@ -37,10 +39,12 @@ fn quantize<'v>(column: &'v [(&str, &str)], small: usize) -> HashMap<&'v str, St
     let split_trimmed = trim_splits(split_index, small, &sorted);
     dbg!(&split_trimmed);
 
-    // Merge any neighbouring splits with the same classification:
-    // https://github.com/d6y/oner/issues/3#issuecomment-537864969
-    let intervals = Interval::from_splits(split_trimmed, &sorted);
+    // 4. Generate distinct intervals from the spits:
+    let intervals: Vec<Interval<f32, &str>> = Interval::from_splits(split_trimmed, &sorted);
     dbg!(&intervals);
+
+    let merged_intervals = Interval::merge_neighbours_with_same_class(&intervals);
+    dbg!(&merged_intervals);
 
     // Generate a re-mapping table from each value we've seen to the new value:
 
@@ -93,17 +97,61 @@ where
     counts
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 enum Interval<T, C> {
     Lower { below: T, class: C },          // e.g., < 100
     Range { from: T, below: T, class: C }, // e.g., >= 100 and < 200
     Upper { from: T, class: C },           // e.g., >= 200
-    Infinite,
+    Infinite { class: C },
+}
+
+impl<T: Copy + Debug + Display, C: Copy + Debug> Interval<T, C> {
+    fn show(&self) -> String {
+        match self {
+            Interval::Lower { below, .. } => format!("< {}", below),
+            Interval::Range { from, below, .. } => format!(">= {} and < {}", from, below),
+            Interval::Upper { from, .. } => format!(">= {}", from),
+            Interval::Infinite { .. } => String::from("any value"),
+        }
+    }
+
+    fn class(&self) -> &C {
+        match self {
+            Interval::Lower { class, .. } => class,
+            Interval::Range { class, .. } => class,
+            Interval::Upper { class, .. } => class,
+            Interval::Infinite { class } => class,
+        }
+    }
+
+    fn merge(&self, later: &Self) -> Self {
+        match (self, later) {
+            (Interval::Lower { .. }, Interval::Range { below, class, .. }) => Interval::Lower {
+                below: *below,
+                class: *class,
+            },
+            (Interval::Lower { .. }, Interval::Upper { class, .. }) => {
+                Interval::Infinite { class: *class }
+            }
+            (Interval::Range { from, .. }, Interval::Range { below, class, .. }) => {
+                Interval::Range {
+                    from: *from,
+                    below: *below,
+                    class: *class,
+                }
+            }
+            (Interval::Range { from, .. }, Interval::Upper { class, .. }) => Interval::Upper {
+                from: *from,
+                class: *class,
+            },
+            _ => panic!("Merging {:?} with {:?} is not supported", self, later),
+        }
+    }
 }
 
 impl<T, C> Interval<T, C>
 where
-    T: Copy + Debug,
+    T: Copy + Debug + Display,
     C: Copy + Debug + Eq + Hash,
 {
     // `splits` is a list of indices where we want to break the values into intervals.
@@ -139,8 +187,12 @@ where
             class: most_frequent_class(index_start, index_end),
         };
 
+        let infinite = || Interval::Infinite {
+            class: most_frequent_class(0, data.len()),
+        };
+
         match splits.len() {
-            0 => vec![Interval::Infinite],
+            0 => vec![infinite()],
             1 => vec![lower(splits[0]), upper(splits[0])],
             n => {
                 let mut intervals = Vec::with_capacity(n + 1);
@@ -152,6 +204,29 @@ where
                 intervals
             }
         }
+    }
+
+    fn merge_neighbours_with_same_class(intervals: &[Interval<T, C>]) -> Vec<Interval<T, C>> {
+        let mut merged: Vec<Interval<T, C>> = Vec::new();
+
+        if let Some(head) = intervals.first() {
+            let mut last_class = head.class();
+            merged.push(*head);
+
+            let tail = &intervals[1..];
+            for interval in tail {
+                let class = interval.class();
+                if class == last_class {
+                    let updated = merged.pop().map(|last| last.merge(interval));
+                    updated.into_iter().for_each(|i| merged.push(i));
+                } else {
+                    last_class = class;
+                    merged.push(*interval);
+                }
+            }
+        }
+
+        merged
     }
 }
 
