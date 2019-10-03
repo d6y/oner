@@ -1,5 +1,5 @@
-use ord_subset::OrdSubsetIterExt;
 use super::iter::frequency_count;
+use ord_subset::OrdSubsetIterExt;
 use std::fmt::Debug;
 use std::fmt::Display;
 use std::hash::Hash;

@@ -1,7 +1,7 @@
-use ord_subset::OrdSubsetSliceExt;
-use std::collections::HashMap;
 use super::interval::Interval;
 use super::iter::frequency_count;
+use ord_subset::OrdSubsetSliceExt;
+use std::collections::HashMap;
 
 pub fn is_numeric() -> bool {
     true
@@ -45,9 +45,7 @@ fn quantize<'v>(column: &'v [(&str, &str)], small: usize) -> HashMap<&'v str, St
     let interval = |value: f32| merged_intervals.iter().find(|i| i.matches(value));
 
     let remapping = HashMap::new();
-    for (value, _) in sorted {
-
-    }
+    for (value, _) in sorted {}
     remapping
 }
 
@@ -84,7 +82,6 @@ fn no_dominant_class(start: usize, until: usize, small: usize, data: &[(f32, &st
     let counts = frequency_count(&classes);
     counts.values().all(|&count| count <= small)
 }
-
 
 #[cfg(test)]
 mod test_quantize {

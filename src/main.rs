@@ -1,10 +1,10 @@
 mod config;
 mod dataset;
+mod interval;
+mod iter;
 mod oner;
 mod print;
 mod quant;
-mod interval;
-mod iter;
 use config::Config;
 use rand::rngs::StdRng;
 use rand::SeedableRng;

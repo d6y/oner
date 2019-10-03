@@ -1,5 +1,5 @@
-use std::hash::Hash;
 use std::collections::HashMap;
+use std::hash::Hash;
 
 pub fn frequency_count<T>(ts: &[T]) -> HashMap<&T, usize>
 where
