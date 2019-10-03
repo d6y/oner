@@ -1,5 +1,7 @@
+use ord_subset::OrdSubsetIterExt;
 use ord_subset::OrdSubsetSliceExt;
 use std::collections::HashMap;
+use std::fmt::Debug;
 use std::hash::Hash;
 
 pub fn is_numeric() -> bool {
@@ -13,14 +15,14 @@ fn quantize<'v>(column: &'v [(&str, &str)], small: usize) -> HashMap<&'v str, St
         if let Ok(n) = v.parse::<f32>() {
             sorted.push((n, c));
         } else {
-            unimplemented!("Cannot yet quantize non-numeric values: https://github.com/d6y/oner/issues/1");
+            unimplemented!(
+                "Cannot yet quantize non-numeric values: https://github.com/d6y/oner/issues/1"
+            );
         }
     }
     sorted.ord_subset_sort_by_key(|pair| pair.0);
 
     // 2. Create a split each time the classification changes
-    // providing there are at least `small` of some class in the split.
-    // (This does not apply to the last split)
 
     // Index into `sorted` where the classification changes to a different value:
     let mut split_index = Vec::new();
@@ -59,9 +61,8 @@ fn trim_splits0(
     start_index: usize,
 ) -> Vec<usize> {
     if let Some(head) = splits.first() {
-        let size = head - start_index;
         let tail = &splits[1..];
-        if size <= small || no_dominant_class(start_index, *head, small, data) {
+        if no_dominant_class(start_index, *head, small, data) {
             // Drop this split:
             trim_splits0(tail, small, data, keep, start_index)
         } else {
@@ -94,51 +95,68 @@ where
 }
 
 #[derive(Debug)]
-enum Interval<T> {
-    Lower { below: T },  // e.g., < 100
-    Range { from: T, below: T }, // e.g., >= 100 and < 200
-    Upper { from: T }, // e.g., >= 200
+enum Interval<T, C> {
+    Lower { below: T, class: C },          // e.g., < 100
+    Range { from: T, below: T, class: C }, // e.g., >= 100 and < 200
+    Upper { from: T, class: C },           // e.g., >= 200
     Infinite,
 }
 
-impl<T> Interval<T>  where T : Copy {
-
+impl<T, C> Interval<T, C>
+where
+    T: Copy + Debug,
+    C: Copy + Debug + Eq + Hash,
+{
     // `splits` is a list of indices where we want to break the values into intervals.
-    // The values are the (value, class) pairs in `data`, and the split indicies are into `data`.
+    // The values are the (value, class) pairs in `data`, and the `splits` contents are indicies are into `data`.
     // The first split is "anything below this value", and the last is "anything of this value and above".
     // Anything else is a range interval.
     // If there are no splits, then there's a single interval covering all values.
-    fn from_splits(splits: Vec<usize>, data: &Vec<(T, &str)>) -> Vec<Interval<T>> {
+    fn from_splits(splits: Vec<usize>, data: &Vec<(T, C)>) -> Vec<Interval<T, C>> {
+        let most_frequent_class = |start: usize, until: usize| {
+            let classes: Vec<C> = data[start..until].iter().map(|pair| pair.1).collect();
+            let largest: Option<&C> = frequency_count(&classes)
+                .into_iter()
+                .ord_subset_max_by_key(|pair| pair.1)
+                .map(|pair| pair.0);
+
+            // Sanity check:
+            let splits_will_define_classes = || {
+                format!("Found no classes for a split during quantization. Range is {} until {} in splits {:?} for data {:?}", start, until, &splits, data)
+            };
+
+            *largest.unwrap_or_else(|| panic!(splits_will_define_classes()))
+        };
 
         let lower = |index: usize| Interval::Lower {
-            below: data[splits[index]].0,
+            below: data[index].0,
+            class: most_frequent_class(0, index),
         };
 
         let upper = |index: usize| Interval::Upper {
-            from: data[splits[index]].0,
+            from: data[index].0,
+            class: most_frequent_class(index, data.len()),
         };
 
         let range = |index_start: usize, index_end: usize| Interval::Range {
-            from: data[splits[index_start]].0,
-            below: data[splits[index_end]].0,
+            from: data[index_start].0,
+            below: data[index_end].0,
+            class: most_frequent_class(index_start, index_end),
         };
 
         match splits.len() {
             0 => vec![Interval::Infinite],
-            1 => {
-                vec![ lower(0), upper(0) ]
-            },
+            1 => vec![lower(splits[0]), upper(splits[0])],
             n => {
-                let mut intervals = Vec::with_capacity(n+1);
-                intervals.push(lower(0));
-                for (&curr_i, &prev_i) in splits.iter().skip(1).take(n-2).zip(splits.iter()) {
-                    intervals.push(range(prev_i, curr_i-1));
+                let mut intervals = Vec::with_capacity(n + 1);
+                intervals.push(lower(splits[0]));
+                for (&curr_i, &prev_i) in splits.iter().skip(1).take(n - 1).zip(splits.iter()) {
+                    intervals.push(range(prev_i, curr_i));
                 }
-                intervals.push(upper(n-1));
+                intervals.push(upper(splits[n - 1]));
                 intervals
-            },
+            }
         }
-
     }
 }
 
@@ -168,7 +186,7 @@ mod test_quantize {
             ("85", "D"),
         ];
 
-        let i1 = "< 71"; 
+        let i1 = "< 71";
         let i2 = ">= 85";
 
         let expected: HashMap<&str, String> = [
