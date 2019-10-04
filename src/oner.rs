@@ -54,11 +54,15 @@ impl Interpreter for Rule {
     }
 }
 
-/// Here we go!
 pub fn discover(dataset: &Dataset<AttributeName, Example>) -> Option<Rule> {
     let mut rules = generate_hypotheses(dataset);
 
     let scores: Vec<Accuracy> = rules.iter().map(|rule| evaluate(rule, dataset)).collect();
+
+    // If you want to peek at all the rules generated:
+    //for (r, s) in rules.iter().zip(scores.iter()) {
+    //    println!("{:?} for {:?}", s, r);
+    //}
 
     let maybe_best_index = index_of_largest_value(&scores);
 
