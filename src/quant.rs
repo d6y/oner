@@ -1,10 +1,13 @@
 use super::interval::Interval;
-use super::iter::frequency_count;
+use super::iter::{count_distinct, frequency_count};
 use ord_subset::OrdSubsetSliceExt;
 use std::collections::HashMap;
+use std::hash::Hash;
 
-pub fn is_numeric() -> bool {
-    true
+pub fn is_numeric<V: Eq + Hash>(values: &[V]) -> bool {
+    // From Holt p. 66:
+    // "To be counted, in table 2, as continuous (column entitled "cont") an attribute must have more than six numerical values."
+    count_distinct(values) > 6
 }
 
 fn quantize<'v>(column: &'v [(&str, &str)], small: usize) -> HashMap<&'v str, String> {
@@ -22,7 +25,6 @@ fn quantize<'v>(column: &'v [(&str, &str)], small: usize) -> HashMap<&'v str, St
     sorted.ord_subset_sort_by_key(|pair| pair.0);
 
     // 2. Create a split each time the classification changes
-
     let mut split_index = Vec::new(); // Index into `sorted` where the classification changes to a different value.
     for (prev_index, ((_cur_value, cur_class), (_prev_val, prev_class))) in
         sorted.iter().skip(1).zip(sorted.iter()).enumerate()
