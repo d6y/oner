@@ -12,8 +12,12 @@ pub enum Interval<T, C> {
     Infinite { class: C },
 }
 
-impl<T: Copy + Debug + Display, C: Copy + Debug> Interval<T, C> {
-    fn show(&self) -> String {
+impl<T, C> Interval<T, C>
+where
+    T: Copy + Debug + Display + PartialOrd,
+    C: Copy + Debug,
+{
+    pub fn show(&self) -> String {
         match self {
             Interval::Lower { below, .. } => format!("< {}", below),
             Interval::Range { from, below, .. } => format!(">= {} and < {}", from, below),
@@ -23,7 +27,12 @@ impl<T: Copy + Debug + Display, C: Copy + Debug> Interval<T, C> {
     }
 
     pub fn matches(&self, value: T) -> bool {
-        false
+        match self {
+            Interval::Lower { below, .. } => value < *below,
+            Interval::Range { from, below, .. } => value >= *from && value < *below,
+            Interval::Upper { from, .. } => value >= *from,
+            Interval::Infinite { .. } => true,
+        }
     }
 
     fn class(&self) -> &C {
@@ -62,7 +71,7 @@ impl<T: Copy + Debug + Display, C: Copy + Debug> Interval<T, C> {
 
 impl<T, C> Interval<T, C>
 where
-    T: Copy + Debug + Display,
+    T: Copy + Debug + Display + PartialOrd,
     C: Copy + Debug + Eq + Hash,
 {
     // `splits` is a list of indices where we want to break the values into intervals.

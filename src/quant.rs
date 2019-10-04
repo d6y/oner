@@ -34,18 +34,23 @@ fn quantize<'v>(column: &'v [(&str, &str)], small: usize) -> HashMap<&'v str, St
 
     // 3. Remove splits that are too small:
     let split_trimmed = trim_splits(split_index, small, &sorted);
-    dbg!(&split_trimmed);
 
     // 4. Generate distinct intervals from the splits:
     let intervals: Vec<Interval<f32, &str>> = Interval::from_splits(split_trimmed, &sorted);
     let merged_intervals = Interval::merge_neighbours_with_same_class(&intervals);
-    dbg!(&merged_intervals);
 
     // 5. Generate a re-mapping table from each value we've seen to a new qualitized value:
     let interval = |value: f32| merged_intervals.iter().find(|i| i.matches(value));
 
-    let remapping = HashMap::new();
-    for (value, _) in sorted {}
+    let mut remapping: HashMap<&str, String> = HashMap::new();
+
+    let original_string_values = column.iter().map(|(k, _v)| k);
+    let numeric_values = sorted.iter().map(|(k, _v)| k);
+    for (numeric, value) in numeric_values.zip(original_string_values) {
+        if let Some(ival) = interval(*numeric) {
+            remapping.insert(value, ival.show());
+        }
+    }
     remapping
 }
 
@@ -109,7 +114,7 @@ mod test_quantize {
             ("85", "D"),
         ];
 
-        let i1 = "< 71";
+        let i1 = "< 85";
         let i2 = ">= 85";
 
         let expected: HashMap<&str, String> = [
