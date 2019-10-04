@@ -1,16 +1,34 @@
+use super::dataset::{Dataset, Example};
 use super::interval::Interval;
-use super::iter::{count_distinct, frequency_count};
+use super::iter::{all_numeric, count_distinct, frequency_count};
 use ord_subset::OrdSubsetSliceExt;
 use std::collections::HashMap;
 use std::hash::Hash;
 
-pub fn is_numeric<V: Eq + Hash>(values: &[V]) -> bool {
+fn is_numeric(values: &[&String]) -> bool {
     // From Holt p. 66:
     // "To be counted, in table 2, as continuous (column entitled "cont") an attribute must have more than six numerical values."
-    count_distinct(values) > 6
+    all_numeric(values) && count_distinct(values) > 6
 }
 
-fn quantize<'v>(column: &'v [(&str, &str)], small: usize) -> HashMap<&'v str, String> {
+pub fn quantize(dataset: Dataset<String, Example>) -> Dataset<String, Example> {
+    let num_attrs = dataset.input_attribute_names.len();
+    for index in 0..num_attrs {
+        let mut column = Vec::new();
+        for example in &dataset.examples {
+            column.push(&example.attribute_values[index]);
+        }
+        println!(
+            "{} {}",
+            &dataset.input_attribute_names[index],
+            is_numeric(&column[..])
+        );
+    }
+
+    dataset
+}
+
+fn quantize_column<'v>(column: &'v [(&str, &str)], small: usize) -> HashMap<&'v str, String> {
     // 1. Get the attribute values in sorted order:
     let mut sorted: Vec<(f32, &str)> = Vec::new();
     for (v, c) in column {
@@ -92,7 +110,7 @@ fn no_dominant_class(start: usize, until: usize, small: usize, data: &[(f32, &st
 
 #[cfg(test)]
 mod test_quantize {
-    use super::quantize;
+    use super::quantize_column;
     use std::collections::HashMap;
     #[test]
     fn test_golf_example() {
@@ -137,6 +155,6 @@ mod test_quantize {
         .iter()
         .map(|(v, s)| (*v, s.to_string()))
         .collect();
-        assert_eq!(expected, quantize(&inputs, 3));
+        assert_eq!(expected, quantize_column(&inputs, 3));
     }
 }

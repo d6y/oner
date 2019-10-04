@@ -17,7 +17,9 @@ fn main() {
     let mut rng: StdRng = SeedableRng::seed_from_u64(config.seed);
 
     match dataset::load(&config.data) {
-        Ok(dataset) => {
+        Ok(raw_dataset) => {
+            let dataset = quant::quantize(raw_dataset);
+
             let (training, testing) = if config.use_whole_dataset {
                 (dataset.clone(), dataset)
             } else {
