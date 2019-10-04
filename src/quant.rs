@@ -3,7 +3,6 @@ use super::interval::Interval;
 use super::iter::{all_numeric, count_distinct, frequency_count};
 use ord_subset::OrdSubsetSliceExt;
 use std::collections::HashMap;
-use std::hash::Hash;
 
 fn is_numeric(values: &[&String]) -> bool {
     // From Holt p. 66:
