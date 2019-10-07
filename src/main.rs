@@ -37,7 +37,11 @@ fn run_once<R: Rng + ?Sized>(rng: &mut R, dataset: &Dataset<AttributeName, Examp
     if let Some(rule) = oner::discover(&training) {
         println!(
             "{}",
-            print::as_matcher(&rule, &dataset.input_attribute_names)
+            print::as_if_then(
+                &rule,
+                &dataset.input_attribute_names,
+                &dataset.output_attribute_name
+            )
         );
         let accuracy = oner::evaluate(&rule, &training);
         println!("Training set accuracy: {:.3}", accuracy.0);
@@ -71,11 +75,15 @@ fn run_many<R: Rng + ?Sized>(
     );
 
     println!("Rules found:");
-    for (i, r) in rules.iter().enumerate() {
+    for (i, rule) in rules.iter().enumerate() {
         println!(
-            "{}: {}",
+            "{}:\n{}",
             i,
-            print::as_matcher(r, &dataset.input_attribute_names)
+            print::as_if_then(
+                rule,
+                &dataset.input_attribute_names,
+                &dataset.output_attribute_name
+            )
         );
     }
 }

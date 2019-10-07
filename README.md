@@ -15,10 +15,8 @@ For example, given a data set of voter demographics (attributes) and voting inte
 1R might produces a rule of the form:
 
 ```
-match region {
-   "the north" => "party A"
-   "the south" => "parry B"
-}
+if region="the north" then vote="party A"
+if region="the south" then vote="party B"
 ```
 
 The rule might only have, say, 20% accuracy. 
@@ -40,11 +38,15 @@ See:
 
 ## Example run
 
- New to Rust? :wave: Start by [installing `rustup`](https://www.rust-lang.org/learn/get-started) to get the `cargo` command. Then...
+ New to Rust? :wave: Start by [installing `rustup`](https://www.rust-lang.org/learn/get-started) to get various tools, including the `cargo` command. Then...
 
 ```
 $ cargo build --quiet --release
-$ ./target/release/oner -d data/ch/ch.csv
+$ ./target/release/oner -d data/fake-house/house.csv -w
+IF size=medium THEN value=medium
+IF size=small THEN value=low
+IF size=big THEN value=high
+Training set accuracy: 0.700
 ```
 
 ## Terminology
