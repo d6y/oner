@@ -39,7 +39,8 @@ fn run_once<R: Rng + ?Sized>(rng: &mut R, dataset: &Dataset<AttributeName, Examp
             "{}",
             print::as_matcher(&rule, &dataset.input_attribute_names)
         );
-        println!("Training set: {:?}", oner::evaluate(&rule, &training));
+        let accuracy = oner::evaluate(&rule, &training);
+        println!("Training set accuracy: {:.3}", accuracy.0);
     } else {
         println!("No rule discovered (no data?)");
     }
@@ -65,7 +66,7 @@ fn run_many<R: Rng + ?Sized>(
     }
 
     println!(
-        "Mean test set accuracy: {}",
+        "Mean test set accuracy: {:.3}",
         accuracy.iter().map(|a| a.0).sum::<f64>() / accuracy.len() as f64
     );
 
