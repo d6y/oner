@@ -13,6 +13,13 @@ use structopt::StructOpt;
 fn main() {
     let config = Config::from_args();
     println!("{:?}", &config);
+
+    assert!(
+        config.use_whole_dataset
+            || (config.training_fraction > 0.0 && config.training_fraction <= 1.0),
+        "Training fraction should be between 0 and 1 unless using the whole dataset"
+    );
+
     assert!(
         config.use_whole_dataset || config.repeats >= 1,
         "Repeat an experiment at least once, or use the whole dataset"
