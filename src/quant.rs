@@ -1,13 +1,13 @@
 use super::dataset::{Dataset, Example};
 use super::interval::Interval;
-use super::iter::{all_numeric, count_distinct, frequency_count};
+use super::iter::{all_numeric_or_missing, count_distinct, frequency_count};
 use ord_subset::OrdSubsetSliceExt;
 use std::collections::HashMap;
 
 fn is_numeric(values: &[&String]) -> bool {
     // From Holt p. 66:
     // "To be counted, in table 2, as continuous (column entitled "cont") an attribute must have more than six numerical values."
-    all_numeric(values) && count_distinct(values) > 6
+    all_numeric_or_missing(values) && count_distinct(values) > 6
 }
 
 pub fn quantize(dataset: Dataset<String, Example>) -> Dataset<String, Example> {

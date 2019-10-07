@@ -23,8 +23,8 @@ where
     set.len()
 }
 
-pub fn all_numeric(xs: &[&String]) -> bool {
-    xs.iter().all(|x| f32::from_str(x).is_ok())
+pub fn all_numeric_or_missing(xs: &[&String]) -> bool {
+    xs.iter().all(|x| x == &"" || x == &"?" || f32::from_str(x).is_ok())
 }
 
 #[cfg(test)]
