@@ -6,12 +6,11 @@ Re-implementing the 1R algorithm (and experiments) described in Holte (1993).
 
 1R is a baseline rule learning algorithm.
 
-An algorithm generates a rule for each attribute.
-The rule is based on the different values the attributes takes on, 
-and for each value the rule predicts the most frequent class that has that value.
-The "one rule" is the rule for the attribute that has the best accuracy.
+The algorithm generates a rule for each attribute, and then picks the "one rule" that has the best accuracy.
 
-For example, given a data set of drinking habits, 1R might produces a rule of the form:
+Each rule (hypothesis) is: for every value of the attribute, the prediction (the `then` part) is the most frequent class (that has the attribute value).
+
+For example, given a data set of drinking habits with attributes such as age, time of day, mood (attributes), 1R might produces a rule of the form:
 
 ```
 if time="morning" then drink="coffee"
