@@ -1,23 +1,24 @@
 use super::dataset::*;
 use itertools::Itertools;
 use std::collections::HashMap;
+use std::hash::Hash;
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Eq, Hash)]
 pub struct Rule {
     pub attribute_index: usize,
     pub cases: Vec<Case>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Eq, Hash)]
 pub struct Case {
     pub attribute_value: Value,
     pub predicted_class: Value,
 }
 
 #[derive(Debug, PartialEq, PartialOrd)]
-pub struct Accuracy(f64);
+pub struct Accuracy(pub f64);
 
-pub fn evaluate(rule: &Rule, dataset: &Dataset<AttributeName, Example>) -> Accuracy {
+pub fn evaluate(rule: &Rule, dataset: &Dataset<&AttributeName, &Example>) -> Accuracy {
     let right_wrong: Vec<Option<bool>> = dataset
         .examples
         .iter()
@@ -54,7 +55,7 @@ impl Interpreter for Rule {
     }
 }
 
-pub fn discover(dataset: &Dataset<AttributeName, Example>) -> Option<Rule> {
+pub fn discover(dataset: &Dataset<&AttributeName, &Example>) -> Option<Rule> {
     let mut rules = generate_hypotheses(dataset);
 
     let scores: Vec<Accuracy> = rules.iter().map(|rule| evaluate(rule, dataset)).collect();
@@ -83,10 +84,10 @@ fn index_of_largest_value<V: PartialOrd>(vs: &[V]) -> Option<usize> {
     }
 }
 
-fn generate_hypotheses(dataset: &Dataset<AttributeName, Example>) -> Vec<Rule> {
+fn generate_hypotheses(dataset: &Dataset<&AttributeName, &Example>) -> Vec<Rule> {
     let mut hs = Vec::new();
 
-    // For each attribute...
+    // Generate a rule for each attribute:
     for (a_index, _a_name) in dataset.input_attribute_names.iter().enumerate() {
         let hypothesis = generate_rule_for_attribute(dataset, a_index);
         hs.push(hypothesis);
@@ -96,12 +97,12 @@ fn generate_hypotheses(dataset: &Dataset<AttributeName, Example>) -> Vec<Rule> {
 }
 
 fn generate_rule_for_attribute(
-    dataset: &Dataset<AttributeName, Example>,
+    dataset: &Dataset<&AttributeName, &Example>,
     attribute_index: usize,
 ) -> Rule {
     let mut cases = Vec::new();
     for v in distinct_column_values(dataset, attribute_index) {
-        // Find the most frequent class for that attribute with that value...
+        // Find the most frequent class for `attribute_index` with value `v`...
         if let Some(class) = most_frequent_class(dataset, attribute_index, &v) {
             cases.push(Case {
                 attribute_value: v.to_owned(),
@@ -116,10 +117,10 @@ fn generate_rule_for_attribute(
     }
 }
 
-fn distinct_column_values(
-    dataset: &Dataset<AttributeName, Example>,
+fn distinct_column_values<'v>(
+    dataset: &'v Dataset<&AttributeName, &Example>,
     attribute_index: usize,
-) -> Vec<&Value> {
+) -> Vec<&'v Value> {
     dataset
         .examples
         .iter()
@@ -129,7 +130,7 @@ fn distinct_column_values(
 }
 
 fn most_frequent_class<'d>(
-    dataset: &'d Dataset<AttributeName, Example>,
+    dataset: &'d Dataset<&AttributeName, &Example>,
     attribute_index: usize,
     value: &str,
 ) -> Option<&'d Value> {
@@ -148,40 +149,4 @@ fn most_frequent_class<'d>(
         .into_iter()
         .max_by_key(|&(_, count)| count)
         .map(|(class, _)| class)
-}
-
-#[cfg(test)]
-mod test_freq_class {
-    use super::most_frequent_class;
-    use super::Dataset;
-    use super::Example;
-    #[test]
-    fn find_most_frequent_class() {
-        let dataset = Dataset {
-            input_attribute_names: vec![String::from("x")],
-            output_attribute_name: String::from("y"),
-            examples: vec![
-                Example {
-                    attribute_values: vec![String::from("yes")],
-                    class: String::from("lo"),
-                },
-                Example {
-                    attribute_values: vec![String::from("noo")],
-                    class: String::from("lo"),
-                },
-                Example {
-                    attribute_values: vec![String::from("yes")],
-                    class: String::from("hi"),
-                },
-                Example {
-                    attribute_values: vec![String::from("yes")],
-                    class: String::from("hi"),
-                },
-            ],
-        };
-        assert_eq!(
-            most_frequent_class(&dataset, 0, "yes"),
-            Some(&String::from("hi"))
-        );
-    }
 }

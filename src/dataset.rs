@@ -1,7 +1,6 @@
 //! `Dataset` is a container for examples along with the names of instances.
 //!
 use csv;
-use rand::seq::SliceRandom;
 use rand::Rng;
 use std::path::PathBuf;
 
@@ -75,7 +74,7 @@ fn csv_failure<T>(msg: String) -> Result<T, csv::Error> {
 }
 
 impl<N, X> Dataset<N, X> {
-    pub fn split<R>(mut self, rng: &mut R, left_fraction: f64) -> (Self, Self)
+    pub fn split<R>(&self, rng: &mut R, left_fraction: f64) -> (Dataset<&N, &X>, Dataset<&N, &X>)
     where
         R: Rng + ?Sized,
         N: Clone,
@@ -85,8 +84,11 @@ impl<N, X> Dataset<N, X> {
         let mut left_examples = Vec::with_capacity(left_count);
         let mut right_examples = Vec::with_capacity(self.examples.len() - left_count);
 
-        self.examples.shuffle(rng);
-        for (i, example) in self.examples.into_iter().enumerate() {
+        let random_indicies =
+            rand::seq::index::sample(rng, self.examples.len(), self.examples.len());
+
+        for (i, index) in random_indicies.iter().enumerate() {
+            let example = &self.examples[index];
             if i < left_count {
                 left_examples.push(example);
             } else {
@@ -94,15 +96,17 @@ impl<N, X> Dataset<N, X> {
             }
         }
 
+        let attr_names = || self.input_attribute_names.iter().collect();
+
         let left = Dataset {
-            input_attribute_names: self.input_attribute_names.clone(),
-            output_attribute_name: self.output_attribute_name.clone(),
+            input_attribute_names: attr_names(),
+            output_attribute_name: &self.output_attribute_name,
             examples: left_examples,
         };
 
         let right = Dataset {
-            input_attribute_names: self.input_attribute_names,
-            output_attribute_name: self.output_attribute_name,
+            input_attribute_names: attr_names(),
+            output_attribute_name: &self.output_attribute_name,
             examples: right_examples,
         };
 

@@ -21,5 +21,5 @@ pub struct Config {
 
     /// Number of times to repeat an experiment to report average accuracy
     #[structopt(short, long, default_value = "25")]
-    pub repeats: i64,
+    pub repeats: usize,
 }
