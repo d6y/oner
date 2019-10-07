@@ -1,10 +1,7 @@
 mod config;
 mod dataset;
-mod interval;
-mod iter;
 mod oner;
 mod print;
-mod quant;
 use config::Config;
 use rand::rngs::StdRng;
 use rand::SeedableRng;
@@ -17,8 +14,7 @@ fn main() {
     let mut rng: StdRng = SeedableRng::seed_from_u64(config.seed);
 
     match dataset::load(&config.data) {
-        Ok(raw_dataset) => {
-            let dataset = quant::quantize(raw_dataset);
+        Ok(dataset) => {
 
             let (training, testing) = if config.use_whole_dataset {
                 (dataset.clone(), dataset)
