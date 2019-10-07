@@ -11,26 +11,29 @@ The rule is based on the different values the attributes takes on,
 and for each value the rule predicts the most frequent class that has that value.
 The "one rule" is the rule for the attribute that has the best accuracy.
 
-For example, given a data set of voter demographics (attributes) and voting intention (class),
-1R might produces a rule of the form:
+For example, given a data set of drinking habits, 1R might produces a rule of the form:
 
 ```
-if region="the north" then vote="party A"
-if region="the south" then vote="party B"
+if time="morning" then drink="coffee"
+if time="afternoon" then drink="tea"
+if time="evening" then drink="water"
 ```
 
-The rule might only have, say, 20% accuracy. 
+The rule might only have, say, 60% accuracy. 
 That's a baseline to compare to other algorithms.
 
 A related idea is "0R" (zero rule), which is the most frequent class in the dataset.
-That is, if our voting data has 100 rows, and 51 of them were for "party A", 
-then 0R would be: predict "party A" (and would have an accuracy of 51/100).
+That is, if our drinking habits data has 100 rows, and 51 of them were for "tea", 
+then 0R would be: predict "tea" (and would have an accuracy of 51/100).
 
 See:
 
 - Holte, R.C. _Machine Learning_ (1993) 11: 63. [https://doi.org/10.1023/A:1022631118932](https://doi.org/10.1023/A:1022631118932).
 
 - Molnar, C, _Interpretable Machine Learning_ (2019). In particular: [Learn Rules from a Single Feature (OneR)](https://christophm.github.io/interpretable-ml-book/rules.html#learn-rules-from-a-single-feature-oner).
+
+
+## Status
 
 - [x] Basic algorithm
 - [ ] Support for continuous values ([#2](https://github.com/d6y/oner/issues/2))
