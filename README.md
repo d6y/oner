@@ -1,14 +1,10 @@
 # A 1R implementation in Rust
 
-Re-implementing the 1R algorithm (and experiments) described in Holte (1993).
+Re-implementing the 1R experiments described in [Holte, 1993](https://doi.org/10.1023/A:1022631118932).
 
-## What is this?
-
-1R is a baseline rule learning algorithm.
+# 1R is a baseline rule learning algorithm.
 
 The algorithm generates a rule for each attribute, and then picks the "one rule" that has the best accuracy.
-
-Each rule (hypothesis) is: for every value of the attribute, the prediction (the `then` part) is the most frequent class (that has the attribute value).
 
 For example, given a data set of drinking habits with attributes such as age, time of day, mood (attributes), 1R might produces a rule of the form:
 
@@ -21,46 +17,20 @@ if time="evening" then drink="water"
 The rule might only have, say, 60% accuracy. 
 That's a baseline to compare to other algorithms.
 
-A related idea is "0R" (zero rule), which is the most frequent class in the dataset.
-That is, if our drinking habits data has 100 rows, and 51 of them were for "tea", 
-then 0R would be: predict "tea" (and would have an accuracy of 51/100).
-
-See:
-
-- Holte, R.C. _Machine Learning_ (1993) 11: 63. [https://doi.org/10.1023/A:1022631118932](https://doi.org/10.1023/A:1022631118932).
-
-- Molnar, C, _Interpretable Machine Learning_ (2019). In particular: [Learn Rules from a Single Feature (OneR)](https://christophm.github.io/interpretable-ml-book/rules.html#learn-rules-from-a-single-feature-oner).
-
-
-## Status
-
-- [x] Basic algorithm
-- [ ] Support for continuous values ([#2](https://github.com/d6y/oner/issues/2))
-- [ ] Improve handling of ties ([#3](https://github.com/d6y/oner/issues/3))
-
-## Example run
+# Example run
 
  New to Rust? :wave: Start by [installing `rustup`](https://www.rust-lang.org/learn/get-started) to get various tools, including the `cargo` command. Then...
 
 ```
 $ cargo build --quiet --release
 $ ./target/release/oner -d data/fake-house/house.csv -w
-IF size=medium THEN value=medium
-IF size=small THEN value=low
-IF size=big THEN value=high
-Training set accuracy: 0.700
+// Training set accuracy: 0.700
+IF size=small THEN low
+IF size=big THEN high
+IF size=medium THEN medium
 ```
 
-## Terminology
-
-I'm following the terminology from Holte (1993):
-
-- Attribute (a.k.a. feature)
-- Value (the value of an attribute or class)
-- Class (a.k.a. classification, prediction)
-- Example (a.k.a. instance)
-
-## Example data sets
+# Example data sets
 
 I have taken data sets and converted to CSV where necessary, including adding header rows.
 
@@ -75,10 +45,10 @@ The `data` folder contains the data from various sources. Unless otherwise speci
 
 - `fake-house`, the dataset used to introduce 1R in [Interpretable Machine Learning](https://christophm.github.io/interpretable-ml-book/rules.html#learn-rules-from-a-single-feature-oner) (published under [CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/)). To run the example use the `-w` flag to use the whole dataset for rule discovery.
 
-## Documentation
+# Licence
 
-To open the internal documentation:
+Copyright 2020 Richard Dallaway
 
-```
-$ cargo doc --no-deps --open --document-private-items
-```
+This Source Code Form is subject to the terms of the Mozilla Public
+License, v. 2.0. If a copy of the MPL was not distributed with this
+file, You can obtain one at <https://mozilla.org/MPL/2.0/>.

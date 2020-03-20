@@ -1,16 +1,17 @@
 mod config;
 mod dataset;
-mod oner;
 mod print;
+use anyhow::Result;
 use config::Config;
-use dataset::{AttributeName, Dataset, Example};
+use dataset::Dataset;
+use ndarray::s;
+use oner_induction::{discover, evaluate};
 use rand::rngs::StdRng;
 use rand::Rng;
 use rand::SeedableRng;
-use std::collections::HashSet;
 use structopt::StructOpt;
 
-fn main() {
+fn main() -> Result<()> {
     let config = Config::from_args();
     println!("{:?}", &config);
 
@@ -27,31 +28,25 @@ fn main() {
 
     let mut rng: StdRng = SeedableRng::seed_from_u64(config.seed);
 
-    match dataset::load(&config.data) {
-        Ok(dataset) => {
-            if config.use_whole_dataset {
-                run_once(&mut rng, &dataset); // Using all the data means no-need to sample
-            } else {
-                run_many(&mut rng, &dataset, config.training_fraction, config.repeats);
-            }
-        }
-        Err(msg) => println!("Error reading data: {}", msg),
-    };
+    let dataset = dataset::load(&config.data)?;
+
+    if config.use_whole_dataset {
+        run_once(&dataset); // Using all the data means no-need to sample
+    } else {
+        run_many(&mut rng, &dataset, config.training_fraction, config.repeats);
+    }
+    Ok(())
 }
 
-fn run_once<R: Rng + ?Sized>(rng: &mut R, dataset: &Dataset<AttributeName, Example>) {
-    let (training, _) = dataset.split(rng, 1.0);
-    if let Some(rule) = oner::discover(&training) {
+fn run_once(dataset: &Dataset) {
+    if let Some((attribute_index, rule)) =
+        discover(&dataset.attributes.view(), &dataset.classes.view())
+    {
         println!(
-            "{}",
-            print::as_if_then(
-                &rule,
-                &dataset.input_attribute_names,
-                &dataset.output_attribute_name
-            )
+            "// Training set accuracy: {:.3}\n{}",
+            &rule.accuracy.0,
+            print::as_if_then(&rule, attribute_index, &dataset)
         );
-        let accuracy = oner::evaluate(&rule, &training);
-        println!("Training set accuracy: {:.3}", accuracy.0);
     } else {
         println!("No rule discovered (no data?)");
     }
@@ -59,20 +54,27 @@ fn run_once<R: Rng + ?Sized>(rng: &mut R, dataset: &Dataset<AttributeName, Examp
 
 fn run_many<R: Rng + ?Sized>(
     rng: &mut R,
-    dataset: &Dataset<AttributeName, Example>,
+    dataset: &Dataset,
     training_fraction: f64,
     repeats: usize,
 ) {
     let mut accuracy = Vec::with_capacity(repeats);
-    let mut rules = HashSet::new();
+    let mut rules = Vec::with_capacity(repeats);
+    let mut rule_attribute_indicies = Vec::with_capacity(repeats);
 
-    for r in 1..repeats {
+    for _r in 1..repeats {
         let (training, testing) = dataset.split(rng, training_fraction);
-        if let Some(rule) = oner::discover(&training) {
-            let performance = oner::evaluate(&rule, &testing);
-            println!("{}: {:?}", r, performance);
-            accuracy.push(performance);
-            rules.insert(rule);
+        if let Some((attribute_index, rule)) =
+            discover(&training.attributes.view(), &training.classes.view())
+        {
+            let test_set_accuracy = evaluate(
+                &rule.cases,
+                &testing.attributes.slice(s![.., attribute_index]),
+                &testing.classes.view(),
+            );
+            accuracy.push(test_set_accuracy);
+            rule_attribute_indicies.push(attribute_index);
+            rules.push(rule);
         }
     }
 
@@ -81,16 +83,11 @@ fn run_many<R: Rng + ?Sized>(
         accuracy.iter().map(|a| a.0).sum::<f64>() / accuracy.len() as f64
     );
 
-    println!("Rules found:");
-    for (i, rule) in rules.iter().enumerate() {
-        println!(
-            "{}:\n{}",
-            i,
-            print::as_if_then(
-                rule,
-                &dataset.input_attribute_names,
-                &dataset.output_attribute_name
-            )
-        );
+    /*println!("Rules found:");
+    for (i, (rule, &attribute_index)) ins
+        rules.iter().zip(rule_attribute_indicies.iter()).enumerate()
+    {
+        println!("{}:\n{}", i, print::as_if_then(&rule, attribute_index, &dataset));
     }
+    */
 }

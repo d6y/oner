@@ -1,114 +1,80 @@
-//! `Dataset` is a container for examples along with the names of instances.
-//!
-use csv;
+use anyhow::Result;
+use csv::ReaderBuilder;
+use ndarray::{s, Array1, Array2, Axis};
+use ndarray_csv::Array2Reader;
 use rand::Rng;
+use std::fs::File;
 use std::path::PathBuf;
 
-#[derive(Debug, Clone)]
-pub struct Dataset<N, X> {
-    pub input_attribute_names: Vec<N>,
-    pub output_attribute_name: N,
-    pub examples: Vec<X>,
+#[derive(Debug)]
+pub struct Dataset {
+    pub attribute_names: Vec<String>,
+    pub attributes: Array2<String>,
+    pub classes: Array1<String>,
 }
-
-pub type AttributeName = String;
-
-#[derive(Debug, Clone)]
-pub struct Example {
-    pub attribute_values: Vec<Value>,
-    pub class: Value,
-}
-
-pub type Value = String;
 
 /// Read a CSV file (with headers and final column as classification) as a `Dataset`.
 ///
 /// The CSV file must:
 /// - start with a header row; and
 /// - have the class as the last attribute.
-pub fn load(path: &PathBuf) -> Result<Dataset<AttributeName, Example>, csv::Error> {
-    let mut rdr = csv::Reader::from_path(path)?;
+pub fn load(path: &PathBuf) -> Result<Dataset> {
+    let file = File::open(path)?;
+    let mut rdr = ReaderBuilder::new().has_headers(true).from_reader(file);
 
     // The header contains attribute names:
     let headers = rdr.headers()?;
-    let attribute_names: Vec<AttributeName> = headers.iter().map(|name| name.to_owned()).collect();
+    let num_attributes = headers.len() - 1;
+    let attribute_names: Vec<String> =
+        headers.iter().map(|name| name.to_owned()).take(num_attributes).collect();
 
-    // How to turn a row of String values into an `Example`
-    let to_example = |row: csv::StringRecord| {
-        let elements: Vec<&str> = row.iter().collect();
-        match elements[..].split_last() {
-            Some((&last, init)) => Ok(Example {
-                attribute_values: init.iter().map(|&a| a.to_owned()).collect(),
-                class: last.to_owned(),
-            }),
-            _ => csv_failure(format!(
-                "Rows should contain at least two values. Found: {:?}",
-                &elements
-            )),
+    // Split the CSV data into attributes and class arrays:
+    let csv: Array2<String> = rdr.deserialize_array2_dynamic()?;
+
+    // The class is the last column:
+    let classes = csv.slice(s![.., -1]).map(|v| v.to_owned());
+
+    // The other columns are attributes:
+    let attributes = csv.slice(s![.., 0..-1]).map(|v| v.to_owned());
+
+    Ok(Dataset { attribute_names, attributes, classes })
+}
+
+impl Dataset {
+    fn new(num_rows: usize, attribute_names: &[String]) -> Dataset {
+        Dataset {
+            attribute_names: attribute_names.to_vec(),
+            attributes: Array2::default((num_rows, attribute_names.len())),
+            classes: Array1::default(num_rows),
         }
-    };
-
-    // Traverse the rows, converting them into `Example` records:
-    let examples: Result<Vec<Example>, _> = rdr
-        .records()
-        .map(|result| result.and_then(to_example))
-        .collect();
-
-    match attribute_names[..].split_last() {
-        None => csv_failure(format!(
-            "Too few attribute names (header row problem): {:?}",
-            &attribute_names
-        )),
-        Some((class, inputs)) => Ok(Dataset {
-            input_attribute_names: inputs.to_vec(),
-            output_attribute_name: class.to_owned(),
-            examples: examples?,
-        }),
     }
-}
 
-fn csv_failure<T>(msg: String) -> Result<T, csv::Error> {
-    use std::io::{Error, ErrorKind};
-    let cause = Error::new(ErrorKind::Other, msg);
-    Err(csv::Error::from(cause))
-}
+    pub fn split<R: Rng + ?Sized>(&self, rng: &mut R, left_fraction: f64) -> (Dataset, Dataset) {
+        // Left and Right refer to the first and second datasets in the return tuple
 
-impl<N, X> Dataset<N, X> {
-    pub fn split<R>(&self, rng: &mut R, left_fraction: f64) -> (Dataset<&N, &X>, Dataset<&N, &X>)
-    where
-        R: Rng + ?Sized,
-        N: Clone,
-    {
-        let left_count: usize = (left_fraction * self.examples.len() as f64).round() as usize;
+        let row_axis = Axis(0);
+        let num_examples = self.attributes.len_of(row_axis);
 
-        let mut left_examples = Vec::with_capacity(left_count);
-        let mut right_examples = Vec::with_capacity(self.examples.len() - left_count);
+        let left_count: usize = (left_fraction * num_examples as f64).round() as usize;
+        let right_count: usize = num_examples - left_count;
 
-        let random_indicies =
-            rand::seq::index::sample(rng, self.examples.len(), self.examples.len());
+        // We'll populate these structures...
+        let mut left = Dataset::new(left_count, &self.attribute_names);
+        let mut right = Dataset::new(right_count, &self.attribute_names);
 
-        for (i, index) in random_indicies.iter().enumerate() {
-            let example = &self.examples[index];
-            if i < left_count {
-                left_examples.push(example);
+        // ...from a shuffled set of indexes:
+        let random_indicies = rand::seq::index::sample(rng, num_examples, num_examples);
+
+        for (left_index, index) in random_indicies.iter().enumerate() {
+            if left_index < left_count {
+                left.attributes.row_mut(left_index).assign(&self.attributes.row(index));
+                left.classes[left_index] = self.classes[index].clone();
             } else {
-                right_examples.push(example);
+                let right_index = left_index - left_count;
+                right.attributes.row_mut(right_index).assign(&self.attributes.slice(s![index, ..]));
+                right.classes[right_index] = self.classes[index].clone();
             }
         }
-
-        let attr_names = || self.input_attribute_names.iter().collect();
-
-        let left = Dataset {
-            input_attribute_names: attr_names(),
-            output_attribute_name: &self.output_attribute_name,
-            examples: left_examples,
-        };
-
-        let right = Dataset {
-            input_attribute_names: attr_names(),
-            output_attribute_name: &self.output_attribute_name,
-            examples: right_examples,
-        };
 
         (left, right)
     }
@@ -121,14 +87,10 @@ mod test_split {
     use rand::SeedableRng;
     #[test]
     fn test_can_split() {
-        let ds = Dataset {
-            input_attribute_names: vec!["a"],
-            output_attribute_name: "z",
-            examples: vec![1, 2, 3, 4],
-        };
-        let mut rng: StdRng = SeedableRng::seed_from_u64(3u64);
+        let ds = Dataset::new(100, &vec!["a".to_string(), "b".to_string()]);
+        let mut rng: StdRng = SeedableRng::seed_from_u64(1u64);
         let (left, right) = ds.split(&mut rng, 2.0 / 3.0);
-        assert_eq!(left.examples.len(), 3);
-        assert_eq!(right.examples.len(), 1);
+        assert_eq!(left.attributes.len(), 2 * 67);
+        assert_eq!(right.attributes.len(), 2 * (100 - 67));
     }
 }
