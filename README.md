@@ -26,6 +26,7 @@ That's a baseline to compare to other algorithms.
 ```
 $ cargo build --quiet --release
 $ ./target/release/oner -d data/fake-house/house.csv -w
+Config { data: "data/fake-house/house.csv", seed: 1, training_fraction: 0.6666666666666666, use_whole_dataset: true, repeats: 25 }
 // Training set accuracy: 0.700
 IF size=small THEN low
 IF size=big THEN high
