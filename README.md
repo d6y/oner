@@ -1,3 +1,5 @@
+![Rust](https://github.com/d6y/oner/workflows/Rust/badge.svg)
+
 # A 1R implementation in Rust
 
 Re-implementing the 1R experiments described in [Holte, 1993](https://doi.org/10.1023/A:1022631118932).
