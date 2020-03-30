@@ -37,6 +37,9 @@ pub fn load(path: &PathBuf) -> Result<Dataset> {
     // The other columns are attributes:
     let attributes = csv.slice(s![.., 0..-1]).map(|v| v.to_owned());
 
+    // TODO: maybe something like...
+    // let (attrbiutes, classes) = csv.split_at(Axis(1), -1);
+
     Ok(Dataset { attribute_names, attributes, classes })
 }
 

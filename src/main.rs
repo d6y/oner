@@ -1,6 +1,7 @@
 mod config;
 mod dataset;
 mod print;
+mod quantize;
 use anyhow::Result;
 use config::Config;
 use dataset::Dataset;
@@ -28,7 +29,11 @@ fn main() -> Result<()> {
 
     let mut rng: StdRng = SeedableRng::seed_from_u64(config.seed);
 
-    let dataset = dataset::load(&config.data)?;
+    let csv_dataset = dataset::load(&config.data)?;
+
+    // From Holt p. 66:
+    // "To be counted, in table 2, as continuous (column entitled "cont") an attribute must have more than six numerical values."
+    let dataset = quantize::auto_quantize(csv_dataset, 7, "?");
 
     if config.use_whole_dataset {
         run_once(&dataset); // Using all the data means no-need to sample
