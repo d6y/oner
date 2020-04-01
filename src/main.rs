@@ -31,9 +31,12 @@ fn main() -> Result<()> {
 
     let csv_dataset = dataset::load(&config.data)?;
 
-    // From Holt p. 66:
-    // "To be counted, in table 2, as continuous (column entitled "cont") an attribute must have more than six numerical values."
-    let dataset = quantize::auto_quantize(csv_dataset, 7, "?");
+    let dataset = quantize::auto_quantize(
+        csv_dataset,
+        1 + config.distinct_above,
+        config.small,
+        &config.missing,
+    );
 
     if config.use_whole_dataset {
         run_once(&dataset); // Using all the data means no-need to sample

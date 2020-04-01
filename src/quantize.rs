@@ -1,29 +1,95 @@
 use super::dataset::Dataset;
-use ndarray::Axis;
+use ndarray::{Array1, Axis};
+use oner_quantize::{find_intervals, quantize, Interval};
 use std::collections::HashSet;
 use std::hash::Hash;
 use std::str::FromStr;
 
-pub fn auto_quantize(dataset: Dataset, min_distinct_values: usize, missing_value: &str) -> Dataset {
+pub fn auto_quantize(
+    dataset: Dataset,
+    min_distinct_values: usize,
+    small: usize,
+    missing_value: &str,
+) -> Dataset {
+    let row_axis = Axis(0);
+    let column_axis = Axis(1);
+
+    let num_examples = dataset.attributes.len_of(row_axis);
+    let mut quantized_dataset = Dataset::new(num_examples, &dataset.attribute_names);
+    quantized_dataset.classes = dataset.classes.clone();
+
     let all_either_numeric_or_missing = |xs: &[String]| -> bool {
-        xs.iter().all(|x| x == &"" || x == &missing_value || f32::from_str(x).is_ok())
+        xs.iter().all(|x| x.is_empty() || *x == missing_value || f32::from_str(x).is_ok())
     };
 
     let is_numeric = |values: &[String]| -> bool {
         all_either_numeric_or_missing(values) && count_distinct(values) >= min_distinct_values
     };
 
-    let col_axis = Axis(1);
+    for (idx, array1) in dataset.attributes.axis_iter(column_axis).enumerate() {
+        let col = array1.to_vec();
 
-    for (idx, col) in dataset.attributes.axis_iter(col_axis).enumerate() {
-        if is_numeric(&col.to_vec()) {
-            println!("Found a numeric column! {} {}", idx, &dataset.attribute_names[idx]);
+        if !is_numeric(&col) {
+            // No change to the attribute
+            quantized_dataset.attributes.column_mut(idx).assign(&dataset.attributes.column(idx));
+        } else {
+            // 1. Select numeric (non-blank, non-missing) values for quantization:
+            let mut selected_classes = Vec::new();
+            let mut selected_attribute_values = Vec::new();
+            for (value, class) in col.iter().zip(dataset.classes.iter()) {
+                if let Ok(numeric_value) = f32::from_str(value) {
+                    selected_attribute_values.push(numeric_value);
+                    selected_classes.push(class);
+                }
+            }
+
+            // 2. Detect intervals from the selected rows:
+            let intervals = find_intervals(&selected_attribute_values, &selected_classes, small);
+
+            // 3. Convert attribute values into discrete string value:
+            let convert = |orig_str: &String| -> String {
+                // NB: efficiency - this is the 3rd time we're parsing this string
+                let maybe_interval =
+                    f32::from_str(&orig_str).ok().and_then(|number| quantize(&intervals, number));
+                maybe_interval.map(|interval| show(interval)).unwrap_or_else(|| orig_str.clone())
+            };
+
+            let quantized_attribute_values: Vec<String> = col.iter().map(convert).collect();
+
+            // 4. Populate the dataset column:
+            quantized_dataset
+                .attributes
+                .column_mut(idx)
+                .assign(&Array1::from(quantized_attribute_values));
         }
     }
 
-    dataset
+    quantized_dataset
 }
 
+pub fn show<A: std::fmt::Display, C>(interval: &Interval<A, C>) -> String {
+    match interval {
+        Interval::Lower { below, .. } => format!("< {}", below),
+        Interval::Range { from, below, .. } => format!(">= {} and < {}", from, below),
+        Interval::Upper { from, .. } => format!(">= {}", from),
+        Interval::Infinite { .. } => String::from("any value"),
+    }
+}
+
+/*
+    // 5. Generate a re-mapping table from each value we've seen to a new qualitized value:
+    let interval = |value: &A| merged_intervals.iter().find(|i| i.matches(value));
+
+    let mut remapping: HashMap<&str, String> = HashMap::new();
+
+    let original_string_values = column.iter().map(|(k, _v)| k);
+    let numeric_values = sorted.iter().map(|(k, _v)| k);
+    for (numeric, value) in numeric_values.zip(original_string_values) {
+        if let Some(ival) = interval(*numeric) {
+            remapping.insert(value, ival.show());
+        }
+    }
+*/
 fn count_distinct<T>(xs: &[T]) -> usize
 where
     T: Eq + Hash,

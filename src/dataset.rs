@@ -44,7 +44,7 @@ pub fn load(path: &PathBuf) -> Result<Dataset> {
 }
 
 impl Dataset {
-    fn new(num_rows: usize, attribute_names: &[String]) -> Dataset {
+    pub fn new(num_rows: usize, attribute_names: &[String]) -> Dataset {
         Dataset {
             attribute_names: attribute_names.to_vec(),
             attributes: Array2::default((num_rows, attribute_names.len())),

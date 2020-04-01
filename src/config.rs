@@ -22,4 +22,16 @@ pub struct Config {
     /// Number of times to repeat an experiment to report average accuracy
     #[structopt(short, long, default_value = "25")]
     pub repeats: usize,
+
+    /// An attribute must have more than than this number of distinct values for a column to be detected as numeric (and so quantized)
+    #[structopt(long, default_value = "6")]
+    pub distinct_above: usize,
+
+    /// When quantizing, an interval must have a dominant class must occure more than this many times.
+    #[structopt(long, default_value = "3")]
+    pub small: usize,
+
+    /// When quantizing, a value to treat as a missing value (in addition to blank attribute values)
+    #[structopt(short, long, default_value = "?")]
+    pub missing: String,
 }
