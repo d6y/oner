@@ -47,16 +47,18 @@ In the CSV version I have moved the class from the first column to the last colu
 I did this with: `awk -F, '{print $2,$3,$4,$5,$6,$7,$8,$9,$10,$1}' OFS=, < breast-cancer.data  > bc.csv`
 
 Holt's experiments (section 2.2 of Holte 1993) used a random 2/3 of the data for training, and 1/3 for testing, repeated 25 times.
-The experiment resulted in a 0.67 classification accuracy on the test (Holte, table 3) against a baseline (0R) accuracy of 0.73 (table 2).
+The experiment resulted in a 0.687 classification accuracy on the test (Holte, table 3) against a baseline (0R) accuracy of 0.73 (table 2).
 
-This software produces a test accuracy between 0.67 and 0.69 (over seeds 1-10).
+This software produces a test accuracy between 0.673 and 0.693 (for seeds 1-10).
 
 ## `ch`
 The [Chess (King-Rook vs. King-Pawn)](https://archive.ics.uci.edu/ml/datasets/Chess+%28King-Rook+vs.+King-Pawn%29) dataset.
 
 ## `cc`, the [Cervical cancer (risk Factors)](https://archive.ics.uci.edu/ml/datasets/Cervical+cancer+%28Risk+Factors%29) dataset. I've removed the Hinselmann, Schiller, and Cytology targets, leaving just the Biopsy target.
 
-- `fake-house`, the dataset used to introduce 1R in [Interpretable Machine Learning](https://christophm.github.io/interpretable-ml-book/rules.html#learn-rules-from-a-single-feature-oner) (published under [CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/)). To run the example use the `-w` flag to use the whole dataset for rule discovery.
+## `fake-house`
+
+The dataset used to introduce 1R in [Interpretable Machine Learning](https://christophm.github.io/interpretable-ml-book/rules.html#learn-rules-from-a-single-feature-oner) (published under [CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/)). To run the example use the `-w` flag to use the whole dataset for rule discovery.
 
 
 # Configuration

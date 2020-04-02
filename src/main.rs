@@ -40,7 +40,7 @@ fn main() -> Result<()> {
 
     if config.use_whole_dataset {
         let (attribute_index, rule) = run_once(&dataset); // Using all the data means no-need to sample
-        println!("// Training set accuracy: {:.2}", &rule.accuracy.0);
+        println!("// Training set accuracy: {:.3}", &rule.accuracy.0);
         if !config.hide_rules {
             println!("{}", print::as_if_then(&rule, attribute_index, &dataset));
         }
@@ -53,7 +53,7 @@ fn main() -> Result<()> {
                 rules.iter().zip(attribute_indicies.iter()).enumerate()
             {
                 println!(
-                    "{}:\n// Training set accuracy: {:.2}\n{}",
+                    "{}:\n// Training set accuracy: {:.3}\n{}",
                     i,
                     rule.accuracy.0,
                     print::as_if_then(rule, *attribute_index, &dataset)
@@ -102,7 +102,7 @@ fn run_many<R: Rng + ?Sized>(
     }
 
     println!(
-        "Mean test set accuracy: {:.2}",
+        "Mean test set accuracy: {:.3}",
         accuracy.iter().map(|a| a.0).sum::<f64>() / accuracy.len() as f64
     );
 
