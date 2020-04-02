@@ -12,7 +12,7 @@ pub fn as_if_then(
 
     for case in &rule.cases {
         rows.push(format!(
-            "IF {}={} THEN {}",
+            "IF {} is {} THEN {}",
             attr_name, case.attribute_value, case.predicted_class
         ));
     }
