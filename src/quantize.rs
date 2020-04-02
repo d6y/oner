@@ -76,20 +76,6 @@ pub fn show<A: std::fmt::Display, C>(interval: &Interval<A, C>) -> String {
     }
 }
 
-/*
-    // 5. Generate a re-mapping table from each value we've seen to a new qualitized value:
-    let interval = |value: &A| merged_intervals.iter().find(|i| i.matches(value));
-
-    let mut remapping: HashMap<&str, String> = HashMap::new();
-
-    let original_string_values = column.iter().map(|(k, _v)| k);
-    let numeric_values = sorted.iter().map(|(k, _v)| k);
-    for (numeric, value) in numeric_values.zip(original_string_values) {
-        if let Some(ival) = interval(*numeric) {
-            remapping.insert(value, ival.show());
-        }
-    }
-*/
 fn count_distinct<T>(xs: &[T]) -> usize
 where
     T: Eq + Hash,
