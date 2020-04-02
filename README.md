@@ -49,12 +49,26 @@ I did this with: `awk -F, '{print $2,$3,$4,$5,$6,$7,$8,$9,$10,$1}' OFS=, < breas
 Holt's experiments (section 2.2 of Holte 1993) used a random 2/3 of the data for training, and 1/3 for testing, repeated 25 times.
 The experiment resulted in a 0.687 classification accuracy on the test (Holte, table 3) against a baseline (0R) accuracy of 0.73 (table 2).
 
-This software produces a test accuracy between 0.673 and 0.693 (for seeds 1-10).
+| Model | Accuracy % |
+|-------|------------|
+| 0R | 70.3 |
+| 1R | 68.7 |
+| This code (mean of 10 seeds)   | 68.4 |
+| This code (median of 10 seeds) | 68.2 |
+| This code (range of 10 seeds)  | 67.5 - 69.5 |
+
+This software produces a test accuracy between 0.673 and 0.693 (for seeds 1-10), mean 0.684.
 
 ## `ch`
 The [Chess (King-Rook vs. King-Pawn)](https://archive.ics.uci.edu/ml/datasets/Chess+%28King-Rook+vs.+King-Pawn%29) dataset.
 
-## `cc`, the [Cervical cancer (risk Factors)](https://archive.ics.uci.edu/ml/datasets/Cervical+cancer+%28Risk+Factors%29) dataset. I've removed the Hinselmann, Schiller, and Cytology targets, leaving just the Biopsy target.
+| Model | Accuracy % |
+|-------|------------|
+| 0R | 52.5 |
+| 1R | 67.6 |
+| This code (mean of 10 seeds)   | 67.5 |
+| This code (median of 10 seeds) | 67.6 |
+| This code (range of 10 seeds)  | 67.1 - 67.8 |
 
 ## `fake-house`
 
