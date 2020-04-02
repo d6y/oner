@@ -28,9 +28,9 @@ $ cargo build --quiet --release
 ❯ ./target/release/oner -d data/fake-house/house.csv -w
 Config { data: "data/fake-house/house.csv", seed: 1, training_fraction: 0.6666666666666666, hide_rules: false, use_whole_dataset: true, repeats: 25, distinct_above: 6, small: 6, missing: "?" }
 // Training set accuracy: 0.70
-IF size=small THEN low
-IF size=big THEN high
-IF size=medium THEN medium
+IF size IS small THEN low
+IF size IS big THEN high
+IF size IS medium THEN medium
 ```
 
 # Example data sets
@@ -90,9 +90,9 @@ Using the whole data set:
 ❯ ./target/release/oner -d data/ir/iris.csv -w
 Config { data: "data/ir/iris.csv", seed: 1, training_fraction: 0.6666666666666666, hide_rules: false, use_whole_dataset: true, repeats: 25, distinct_above: 6, small: 6, missing: "?" }
 // Training set accuracy: 0.960
-IF PetalWidthInCm is < 1 THEN Iris-setosa
-IF PetalWidthInCm is >= 1 and < 1.7 THEN Iris-versicolor
-IF PetalWidthInCm is >= 1.7 THEN Iris-virginica
+IF PetalWidthInCm IS < 1 THEN Iris-setosa
+IF PetalWidthInCm IS >= 1 and < 1.7 THEN Iris-versicolor
+IF PetalWidthInCm IS >= 1.7 THEN Iris-virginica
 ```
 
 ## `fake-house`
