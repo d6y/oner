@@ -68,6 +68,33 @@ The [Chess (King-Rook vs. King-Pawn)](https://archive.ics.uci.edu/ml/datasets/Ch
 | This code (median of 10 seeds) | 67.6 |
 | This code (range of 10 seeds)  | 67.2 - 67.8 |
 
+## `ir`
+The [Iris](https://archive.ics.uci.edu/ml/datasets/Iris) dataset. The CSV version was created with:
+
+```
+$ echo "SepalLengthInCm,SepalWidthInCm,PetalLengthInCm,PetalWidthInCm,Class" > iris.csv
+$ cat iris.data >> iris.csv
+```
+
+| Model | Accuracy % |
+|-------|------------|
+| 0R | 33.3 |
+| 1R | 93.5 |
+| This code (mean of 10 seeds)   | 95.1 |
+| This code (median of 10 seeds) | 95.0 |
+| This code (range of 10 seeds)  | 94.5 - 95.9 |
+
+Using the whole data set:
+
+```
+❯ ./target/release/oner -d data/ir/iris.csv -w
+Config { data: "data/ir/iris.csv", seed: 1, training_fraction: 0.6666666666666666, hide_rules: false, use_whole_dataset: true, repeats: 25, distinct_above: 6, small: 6, missing: "?" }
+// Training set accuracy: 0.960
+IF PetalWidthInCm is < 1 THEN Iris-setosa
+IF PetalWidthInCm is >= 1 and < 1.7 THEN Iris-versicolor
+IF PetalWidthInCm is >= 1.7 THEN Iris-virginica
+```
+
 ## `fake-house`
 
 The dataset used to introduce 1R in [Interpretable Machine Learning](https://christophm.github.io/interpretable-ml-book/rules.html#learn-rules-from-a-single-feature-oner) (published under [CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/)). To run the example use the `-w` flag to use the whole dataset for rule discovery.
