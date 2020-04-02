@@ -85,7 +85,7 @@ fn run_many<R: Rng + ?Sized>(
     let mut rules = Vec::with_capacity(repeats);
     let mut rule_attribute_indicies = Vec::with_capacity(repeats);
 
-    for _r in 1..repeats {
+    for _r in 0..repeats {
         let (training, testing) = dataset.split(rng, training_fraction);
         if let Some((attribute_index, rule)) =
             discover(&training.attributes.view(), &training.classes.view())

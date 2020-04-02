@@ -54,10 +54,8 @@ The experiment resulted in a 0.687 classification accuracy on the test (Holte, t
 | 0R | 70.3 |
 | 1R | 68.7 |
 | This code (mean of 10 seeds)   | 68.4 |
-| This code (median of 10 seeds) | 68.2 |
-| This code (range of 10 seeds)  | 67.5 - 69.5 |
-
-This software produces a test accuracy between 0.673 and 0.693 (for seeds 1-10), mean 0.684.
+| This code (median of 10 seeds) | 68.3 |
+| This code (range of 10 seeds)  | 67.6 - 69.6 |
 
 ## `ch`
 The [Chess (King-Rook vs. King-Pawn)](https://archive.ics.uci.edu/ml/datasets/Chess+%28King-Rook+vs.+King-Pawn%29) dataset.
@@ -66,9 +64,9 @@ The [Chess (King-Rook vs. King-Pawn)](https://archive.ics.uci.edu/ml/datasets/Ch
 |-------|------------|
 | 0R | 52.5 |
 | 1R | 67.6 |
-| This code (mean of 10 seeds)   | 67.5 |
+| This code (mean of 10 seeds)   | 67.6 |
 | This code (median of 10 seeds) | 67.6 |
-| This code (range of 10 seeds)  | 67.1 - 67.8 |
+| This code (range of 10 seeds)  | 67.2 - 67.8 |
 
 ## `fake-house`
 
