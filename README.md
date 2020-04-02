@@ -85,7 +85,7 @@ USAGE:
 
 FLAGS:
         --help                 Prints help information
-    -h, --hide-rules           Supress printing of rules at end of run
+    -h, --hide-rules           Suppress printing of rules at end of run
     -w, --use-whole-dataset    Use all the data for training and testing (overrides -t)
     -V, --version              Prints version information
 
@@ -102,7 +102,7 @@ OPTIONS:
 
     -s, --seed <seed>                              Random seed [default: 1]
         --small <small>
-            When quantizing, an interval must have a dominant class must occure more than this many times. [default: 6]
+            When quantizing, an interval must have a dominant class must occur more than this many times. [default: 6]
 
     -t, --training-fraction <training-fraction>
             Fraction of the data to use for training (vs. testing) [default: 0.6666666666666666]
