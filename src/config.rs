@@ -15,6 +15,10 @@ pub struct Config {
     #[structopt(short, long, default_value = "0.6666666666666666")]
     pub training_fraction: f64,
 
+    /// Supress printing of rules at end of run
+    #[structopt(short = "h", long)]
+    pub hide_rules: bool,
+
     /// Use all the data for training and testing (overrides -t)
     #[structopt(short = "w", long)]
     pub use_whole_dataset: bool,
@@ -28,7 +32,7 @@ pub struct Config {
     pub distinct_above: usize,
 
     /// When quantizing, an interval must have a dominant class must occure more than this many times.
-    #[structopt(long, default_value = "3")]
+    #[structopt(long, default_value = "6")]
     pub small: usize,
 
     /// When quantizing, a value to treat as a missing value (in addition to blank attribute values)

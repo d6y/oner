@@ -6,7 +6,7 @@ use anyhow::Result;
 use config::Config;
 use dataset::Dataset;
 use ndarray::s;
-use oner_induction::{discover, evaluate};
+use oner_induction::{discover, evaluate, Rule};
 use rand::rngs::StdRng;
 use rand::Rng;
 use rand::SeedableRng;
@@ -39,24 +39,39 @@ fn main() -> Result<()> {
     );
 
     if config.use_whole_dataset {
-        run_once(&dataset); // Using all the data means no-need to sample
+        let (attribute_index, rule) = run_once(&dataset); // Using all the data means no-need to sample
+        println!("// Training set accuracy: {:.2}", &rule.accuracy.0);
+        if !config.hide_rules {
+            println!("{}", print::as_if_then(&rule, attribute_index, &dataset));
+        }
     } else {
-        run_many(&mut rng, &dataset, config.training_fraction, config.repeats);
+        let (attribute_indicies, rules) =
+            run_many(&mut rng, &dataset, config.training_fraction, config.repeats);
+        if !config.hide_rules {
+            println!("Rules found:");
+            for (i, (rule, attribute_index)) in
+                rules.iter().zip(attribute_indicies.iter()).enumerate()
+            {
+                println!(
+                    "{}:\n// Training set accuracy: {:.2}\n{}",
+                    i,
+                    rule.accuracy.0,
+                    print::as_if_then(rule, *attribute_index, &dataset)
+                );
+            }
+        }
     }
+
     Ok(())
 }
 
-fn run_once(dataset: &Dataset) {
+fn run_once(dataset: &Dataset) -> (usize, Rule<String, String>) {
     if let Some((attribute_index, rule)) =
         discover(&dataset.attributes.view(), &dataset.classes.view())
     {
-        println!(
-            "// Training set accuracy: {:.3}\n{}",
-            &rule.accuracy.0,
-            print::as_if_then(&rule, attribute_index, &dataset)
-        );
+        (attribute_index, rule)
     } else {
-        println!("No rule discovered (no data?)");
+        panic!("No rule discovered (no data?)");
     }
 }
 
@@ -65,7 +80,7 @@ fn run_many<R: Rng + ?Sized>(
     dataset: &Dataset,
     training_fraction: f64,
     repeats: usize,
-) {
+) -> (Vec<usize>, Vec<Rule<String, String>>) {
     let mut accuracy = Vec::with_capacity(repeats);
     let mut rules = Vec::with_capacity(repeats);
     let mut rule_attribute_indicies = Vec::with_capacity(repeats);
@@ -87,15 +102,9 @@ fn run_many<R: Rng + ?Sized>(
     }
 
     println!(
-        "Mean test set accuracy: {:.3}",
+        "Mean test set accuracy: {:.2}",
         accuracy.iter().map(|a| a.0).sum::<f64>() / accuracy.len() as f64
     );
 
-    /*println!("Rules found:");
-    for (i, (rule, &attribute_index)) ins
-        rules.iter().zip(rule_attribute_indicies.iter()).enumerate()
-    {
-        println!("{}:\n{}", i, print::as_if_then(&rule, attribute_index, &dataset));
-    }
-    */
+    (rule_attribute_indicies, rules)
 }
