@@ -12,10 +12,10 @@ ndarray-csv = "0.4"
 rand = "0.7"
 structopt = "0.3"
 
-oner_induction = "0.2"
+oner_induction = "0.2.1"
 # oner_induction = { git = "https://github.com/d6y/oner_induction", branch = "master" }
-# oner_induction = { path = "../oner_induction" }
+#oner_induction = { path = "../oner_induction" }
 
-# oner_quantize = "0.2"
+oner_quantize = "0.1"
 # oner_quantize = { git = "https://github.com/d6y/oner_quantize", branch = "master" }
-oner_quantize = { path = "../oner_quantize" }
+#oner_quantize = { path = "../oner_quantize" }
