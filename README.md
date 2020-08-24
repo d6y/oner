@@ -16,12 +16,12 @@ if time="afternoon" then drink="tea"
 if time="evening" then drink="water"
 ```
 
-The rule might only have, say, 60% accuracy. 
+The rule might only have, say, 60% accuracy.
 That's a baseline to compare to other algorithms.
 
 # Example run
 
- New to Rust? :wave: Start by [installing `rustup`](https://www.rust-lang.org/learn/get-started) to get various tools, including the `cargo` command. Then...
+New to Rust? :wave: Start by [installing `rustup`](https://www.rust-lang.org/learn/get-started) to get various tools, including the `cargo` command. Then...
 
 ```
 $ cargo build --quiet --release
@@ -35,6 +35,8 @@ IF size IS medium THEN medium
 
 # Example data sets
 
+This application assumes attributes (features) are the columns and rows are the instances (examples).
+
 I have taken data sets and converted to CSV where necessary, including adding header rows.
 
 The `data` folder contains the data from various sources. Unless otherwise specified, it'll be the [UCI Machine Learning Repository](https://archive.ics.uci.edu/ml/citation_policy.html).
@@ -43,32 +45,34 @@ The `data` folder contains the data from various sources. Unless otherwise speci
 
 A [breast cancer](https://archive.ics.uci.edu/ml/datasets/Breast+Cancer) dataset.
 
-In the CSV version I have moved the class from the first column to the last column (that's what this code expects). 
-I did this with: `awk -F, '{print $2,$3,$4,$5,$6,$7,$8,$9,$10,$1}' OFS=, < breast-cancer.data  > bc.csv`
+In the CSV version I have moved the class from the first column to the last column (that's what this code expects).
+I did this with: `awk -F, '{print $2,$3,$4,$5,$6,$7,$8,$9,$10,$1}' OFS=, < breast-cancer.data > bc.csv`
 
 Holt's experiments (section 2.2 of Holte 1993) used a random 2/3 of the data for training, and 1/3 for testing, repeated 25 times.
 The experiment resulted in a 0.687 classification accuracy on the test (Holte, table 3) against a baseline (0R) accuracy of 0.73 (table 2).
 
-| Model | Accuracy % |
-|-------|------------|
-| 0R | 70.3 |
-| 1R | 68.7 |
-| This code (mean of 10 seeds)   | 68.4 |
-| This code (median of 10 seeds) | 68.3 |
+| Model                          | Accuracy %  |
+| ------------------------------ | ----------- |
+| 0R                             | 70.3        |
+| 1R                             | 68.7        |
+| This code (mean of 10 seeds)   | 68.4        |
+| This code (median of 10 seeds) | 68.3        |
 | This code (range of 10 seeds)  | 67.6 - 69.6 |
 
 ## `ch`
+
 The [Chess (King-Rook vs. King-Pawn)](https://archive.ics.uci.edu/ml/datasets/Chess+%28King-Rook+vs.+King-Pawn%29) dataset.
 
-| Model | Accuracy % |
-|-------|------------|
-| 0R | 52.5 |
-| 1R | 67.6 |
-| This code (mean of 10 seeds)   | 67.6 |
-| This code (median of 10 seeds) | 67.6 |
+| Model                          | Accuracy %  |
+| ------------------------------ | ----------- |
+| 0R                             | 52.5        |
+| 1R                             | 67.6        |
+| This code (mean of 10 seeds)   | 67.6        |
+| This code (median of 10 seeds) | 67.6        |
 | This code (range of 10 seeds)  | 67.2 - 67.8 |
 
 ## `ir`
+
 The [Iris](https://archive.ics.uci.edu/ml/datasets/Iris) dataset. The CSV version was created with:
 
 ```
@@ -76,12 +80,12 @@ $ echo "SepalLengthInCm,SepalWidthInCm,PetalLengthInCm,PetalWidthInCm,Class" > i
 $ cat iris.data >> iris.csv
 ```
 
-| Model | Accuracy % |
-|-------|------------|
-| 0R | 33.3 |
-| 1R | 93.5 |
-| This code (mean of 10 seeds)   | 95.1 |
-| This code (median of 10 seeds) | 95.0 |
+| Model                          | Accuracy %  |
+| ------------------------------ | ----------- |
+| 0R                             | 33.3        |
+| 1R                             | 93.5        |
+| This code (mean of 10 seeds)   | 95.1        |
+| This code (median of 10 seeds) | 95.0        |
 | This code (range of 10 seeds)  | 94.5 - 95.9 |
 
 Using the whole data set:
@@ -98,7 +102,6 @@ IF PetalWidthInCm IS >= 1.7 THEN Iris-virginica
 ## `fake-house`
 
 The dataset used to introduce 1R in [Interpretable Machine Learning](https://christophm.github.io/interpretable-ml-book/rules.html#learn-rules-from-a-single-feature-oner) (published under [CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/)). To run the example use the `-w` flag to use the whole dataset for rule discovery.
-
 
 # Configuration
 
