@@ -1,5 +1,5 @@
 use super::dataset::Dataset;
-use oner_induction::Rule;
+use oner_induction::{Case, Rule};
 
 pub fn as_if_then(
     rule: &Rule<String, String>,
@@ -10,7 +10,18 @@ pub fn as_if_then(
 
     let attr_name = &dataset.attribute_names[attribute_index];
 
+    // The output is more readable if we sort by the attribute value of each case
+    // TODO: implement clone on Case
+    let mut sorted_cases = Vec::new();
     for case in &rule.cases {
+        sorted_cases.push(Case {
+            attribute_value: case.attribute_value.to_owned(),
+            predicted_class: case.predicted_class.to_owned(),
+        });
+    }
+    sorted_cases.sort_by_key(|c| c.attribute_value.to_owned());
+
+    for case in sorted_cases {
         rows.push(format!(
             "IF {} IS {} THEN {}",
             attr_name, case.attribute_value, case.predicted_class
