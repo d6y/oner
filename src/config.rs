@@ -23,6 +23,10 @@ pub struct Config {
     #[structopt(short = "w", long)]
     pub use_whole_dataset: bool,
 
+    /// Write predictions to a file in CSV format
+    #[structopt(short = "c", long)]
+    pub csv_predictions: Option<String>,
+
     /// Number of times to repeat an experiment to report average accuracy
     #[structopt(short, long, default_value = "25")]
     pub repeats: usize,

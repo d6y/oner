@@ -37,3 +37,20 @@ pub fn as_matcher(
 
     rows.join("\n")
 }
+
+pub fn print_predictions(missing: &str, predictions: Vec<(String, Option<String>)>) -> String {
+    let mut rows = Vec::with_capacity(1 + predictions.len());
+
+    rows.push(String::from("Actual,Prediction"));
+
+    for (actual, predicted) in predictions.iter() {
+        let pred_text = match predicted {
+            Some(value) => value,
+            None => missing,
+        };
+        let row = format!("{},{}", actual, pred_text);
+        rows.push(row);
+    }
+
+    rows.join("\n")
+}

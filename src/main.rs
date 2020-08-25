@@ -5,11 +5,13 @@ mod quantize;
 use anyhow::Result;
 use config::Config;
 use dataset::Dataset;
-use ndarray::s;
-use oner_induction::{discover, evaluate, Rule};
+use ndarray::{s, Zip};
+use oner_induction::{discover, evaluate, interpret, Rule};
 use rand::rngs::StdRng;
 use rand::Rng;
 use rand::SeedableRng;
+use std::fs::File;
+use std::io::Write;
 use structopt::StructOpt;
 
 fn main() -> Result<()> {
@@ -41,6 +43,14 @@ fn main() -> Result<()> {
     if config.use_whole_dataset {
         let (attribute_index, rule) = run_once(&dataset); // Using all the data means no-need to sample
         println!("// Training set accuracy: {:.3}", &rule.accuracy.0);
+        if let Some(csv_filename) = config.csv_predictions {
+            let csv = print::print_predictions(
+                &config.missing,
+                predict(attribute_index, &rule, &dataset),
+            );
+            let mut file = File::create(csv_filename)?;
+            file.write_all(csv.as_bytes())?;
+        }
         if !config.hide_rules {
             println!("{}", print::as_if_then(&rule, attribute_index, &dataset));
         }
@@ -107,4 +117,21 @@ fn run_many<R: Rng + ?Sized>(
     );
 
     (rule_attribute_indicies, rules)
+}
+
+fn predict(
+    attribute_index: usize,
+    rule: &Rule<String, String>,
+    dataset: &Dataset,
+) -> Vec<(String, Option<String>)> {
+    let mut predictions = Vec::with_capacity(dataset.attributes.len());
+
+    let attribute_values = dataset.attributes.column(attribute_index);
+
+    Zip::from(attribute_values).and(&dataset.classes).apply(|attribute_value, class| {
+        let prediction = interpret(&rule.cases, attribute_value);
+        predictions.push((class.to_owned(), prediction.map(|str| str.to_owned())));
+    });
+
+    predictions
 }
